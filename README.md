@@ -37,7 +37,7 @@ Lightweight CRM for real estate/sales teams with leads, contacts, deals, tasks, 
 - README embeds (example):
   - Dashboard: `assets/demo/dashboard.png`
   - Leads Kanban: `assets/demo/leads-kanban.png`
-  - AI Assistant: `assets/demo/ai-assistant.gif`
+  - AI Assistant: `assets/demo/ai-assistant.png`
 
 ## GitHub Pages (static preview)
 - The app is dynamic (PHP), so GitHub Pages hosts only the static landing in `docs/`.
