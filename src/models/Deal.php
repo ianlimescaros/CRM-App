@@ -21,6 +21,10 @@ class Deal
             $sql .= ' AND lead_id = :lead_id';
             $params[':lead_id'] = (int)$filters['lead_id'];
         }
+        if (!empty($filters['title'])) {
+            $sql .= ' AND title LIKE :title';
+            $params[':title'] = '%' . $filters['title'] . '%';
+        }
 
         $orderBy = $pagination['order_by'] ?? 'created_at';
         $orderDir = strtoupper($pagination['order_dir'] ?? 'DESC');

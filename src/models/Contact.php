@@ -4,10 +4,14 @@ require_once __DIR__ . '/../config/database.php';
 
 class Contact
 {
-    public static function all(int $userId, array $pagination = []): array
+    public static function all(int $userId, array $pagination = [], array $filters = []): array
     {
         $sql = 'SELECT * FROM contacts WHERE user_id = :user_id';
         $params = [':user_id' => $userId];
+        if (!empty($filters['search'])) {
+            $sql .= ' AND (full_name LIKE :q OR email LIKE :q OR company LIKE :q)';
+            $params[':q'] = '%' . $filters['search'] . '%';
+        }
         $orderBy = $pagination['order_by'] ?? 'created_at';
         $orderDir = strtoupper($pagination['order_dir'] ?? 'DESC');
         $allowedOrder = ['created_at', 'full_name', 'email'];
@@ -30,10 +34,16 @@ class Contact
         return $stmt->fetchAll();
     }
 
-    public static function countAll(int $userId): int
+    public static function countAll(int $userId, array $filters = []): int
     {
-        $stmt = db()->prepare('SELECT COUNT(*) as cnt FROM contacts WHERE user_id = :user_id');
-        $stmt->execute([':user_id' => $userId]);
+        $sql = 'SELECT COUNT(*) as cnt FROM contacts WHERE user_id = :user_id';
+        $params = [':user_id' => $userId];
+        if (!empty($filters['search'])) {
+            $sql .= ' AND (full_name LIKE :q OR email LIKE :q OR company LIKE :q)';
+            $params[':q'] = '%' . $filters['search'] . '%';
+        }
+        $stmt = db()->prepare($sql);
+        $stmt->execute($params);
         $row = $stmt->fetch();
         return (int)($row['cnt'] ?? 0);
     }

@@ -11,6 +11,10 @@
                     <span class="inline-flex px-2 py-1 rounded bg-blue-50 text-blue-700">Buyer</span>
                     <span class="inline-flex px-2 py-1 rounded bg-emerald-50 text-emerald-700">High Priority</span>
                 </div>
+                <div class="flex gap-2 mt-3 text-xs">
+                    <button id="clientQuickTask" class="px-3 py-1 border border-border rounded hover:bg-gray-100">Add task</button>
+                    <button id="clientQuickDeal" class="px-3 py-1 border border-border rounded hover:bg-gray-100">Add deal</button>
+                </div>
             </div>
         </div>
     </div>
@@ -24,6 +28,26 @@
                 </div>
                 <div id="clientTimeline" class="space-y-3 text-sm">
                     <!-- filled by JS -->
+                </div>
+            </div>
+
+            <div class="bg-white border border-border rounded-card shadow-card p-4">
+                <div class="flex items-center justify-between mb-3">
+                    <h2 class="font-semibold">Related tasks</h2>
+                    <span class="text-xs text-muted">Linked to this contact</span>
+                </div>
+                <div id="clientTasks" class="space-y-2 text-sm text-gray-700">
+                    <div class="text-gray-500">Loading...</div>
+                </div>
+            </div>
+
+            <div class="bg-white border border-border rounded-card shadow-card p-4">
+                <div class="flex items-center justify-between mb-3">
+                    <h2 class="font-semibold">Related deals</h2>
+                    <span class="text-xs text-muted">Linked to this contact</span>
+                </div>
+                <div id="clientDeals" class="space-y-2 text-sm text-gray-700">
+                    <div class="text-gray-500">Loading...</div>
                 </div>
             </div>
 

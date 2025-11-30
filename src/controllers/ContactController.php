@@ -7,6 +7,9 @@ require_once __DIR__ . '/../models/Contact.php';
 require_once __DIR__ . '/../models/Lead.php';
 require_once __DIR__ . '/../models/Deal.php';
 require_once __DIR__ . '/../models/Task.php';
+require_once __DIR__ . '/../models/ContactNote.php';
+require_once __DIR__ . '/../models/ContactFile.php';
+require_once __DIR__ . '/../models/ContactActivity.php';
 
 class ContactController
 {
@@ -17,14 +20,18 @@ class ContactController
         $perPage = min(50, max(5, (int)($_GET['per_page'] ?? 20)));
         $orderBy = $_GET['sort'] ?? 'created_at';
         $orderDir = $_GET['direction'] ?? 'DESC';
+        $filters = [];
+        if (!empty($_GET['search'])) {
+            $filters['search'] = $_GET['search'];
+        }
         $pagination = [
             'limit' => $perPage,
             'offset' => ($page - 1) * $perPage,
             'order_by' => $orderBy,
             'order_dir' => $orderDir,
         ];
-        $total = Contact::countAll((int)$user['id']);
-        $contacts = Contact::all((int)$user['id'], $pagination);
+        $total = Contact::countAll((int)$user['id'], $filters);
+        $contacts = Contact::all((int)$user['id'], $pagination, $filters);
         Response::success([
             'contacts' => $contacts,
             'meta' => [
@@ -127,12 +134,7 @@ class ContactController
             Response::error('Contact not found', 404);
         }
 
-        $timeline = [
-            ['at' => date('Y-m-d'), 'type' => 'call', 'detail' => 'Discussed next steps and budget alignment'],
-            ['at' => date('Y-m-d', strtotime('-2 days')), 'type' => 'email', 'detail' => 'Shared property shortlist and brochure'],
-            ['at' => date('Y-m-d', strtotime('-5 days')), 'type' => 'meeting', 'detail' => 'Initial consultation completed'],
-        ];
-
+        $timeline = ContactActivity::listForContact((int)$user['id'], $id);
         Response::success(['timeline' => $timeline]);
     }
 
@@ -144,11 +146,7 @@ class ContactController
             Response::error('Contact not found', 404);
         }
 
-        $files = [
-            ['name' => 'Brochure.pdf', 'size' => '1.2MB', 'updated_at' => date('Y-m-d', strtotime('-1 day'))],
-            ['name' => 'Floorplan.png', 'size' => '820KB', 'updated_at' => date('Y-m-d', strtotime('-3 days'))],
-        ];
-
+        $files = ContactFile::listForContact((int)$user['id'], $id);
         Response::success(['files' => $files]);
     }
 
@@ -166,18 +164,62 @@ class ContactController
             if ($note === '') {
                 Response::error('Validation failed', 422, ['content' => 'Note content is required.']);
             }
-            $newNote = [
-                'content' => $note,
-                'created_at' => date('Y-m-d H:i:s'),
-            ];
-            Response::success(['note' => $newNote], 201);
+            $created = ContactNote::create((int)$user['id'], $id, $note);
+            ContactActivity::create((int)$user['id'], $id, 'note', $note);
+            Response::success(['note' => $created], 201);
         }
 
-        $notes = [
-            ['content' => 'Prefers email; interested in 3-bed units.', 'created_at' => date('Y-m-d', strtotime('-2 days'))],
-            ['content' => 'Budget flexible if location is prime.', 'created_at' => date('Y-m-d', strtotime('-5 days'))],
-        ];
+        $notes = ContactNote::listForContact((int)$user['id'], $id);
         Response::success(['notes' => $notes]);
+    }
+
+    public function addTask(int $id): void
+    {
+        $user = AuthMiddleware::require();
+        $contact = Contact::find((int)$user['id'], $id);
+        if (!$contact) {
+            Response::error('Contact not found', 404);
+        }
+        $input = $this->getJsonInput();
+        $errors = Validator::required($input, ['title']);
+        if ($errors) {
+            Response::error('Validation failed', 422, $errors);
+        }
+        $taskId = Task::create((int)$user['id'], [
+            'title' => $input['title'],
+            'description' => $input['description'] ?? null,
+            'due_date' => $input['due_date'] ?? null,
+            'status' => $input['status'] ?? 'pending',
+            'contact_id' => $id,
+        ]);
+        $task = Task::find((int)$user['id'], $taskId);
+        ContactActivity::create((int)$user['id'], $id, 'task', 'Task created: ' . $task['title']);
+        Response::success(['task' => $task], 201);
+    }
+
+    public function addDeal(int $id): void
+    {
+        $user = AuthMiddleware::require();
+        $contact = Contact::find((int)$user['id'], $id);
+        if (!$contact) {
+            Response::error('Contact not found', 404);
+        }
+        $input = $this->getJsonInput();
+        $errors = Validator::required($input, ['title', 'stage']);
+        if ($errors) {
+            Response::error('Validation failed', 422, $errors);
+        }
+        $dealId = Deal::create((int)$user['id'], [
+            'title' => $input['title'],
+            'stage' => $input['stage'],
+            'amount' => $input['amount'] ?? 0,
+            'close_date' => $input['close_date'] ?? null,
+            'contact_id' => $id,
+            'lead_id' => $input['lead_id'] ?? null,
+        ]);
+        $deal = Deal::find((int)$user['id'], $dealId);
+        ContactActivity::create((int)$user['id'], $id, 'note', 'Deal created: ' . $deal['title']);
+        Response::success(['deal' => $deal], 201);
     }
 
     private function getJsonInput(): array

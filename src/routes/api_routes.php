@@ -25,6 +25,8 @@ return [
     ['method' => 'GET', 'path' => '/contacts/{id}/files', 'handler' => [ContactController::class, 'files']],
     ['method' => 'GET', 'path' => '/contacts/{id}/notes', 'handler' => [ContactController::class, 'notes']],
     ['method' => 'POST', 'path' => '/contacts/{id}/notes', 'handler' => [ContactController::class, 'notes']],
+    ['method' => 'POST', 'path' => '/contacts/{id}/tasks', 'handler' => [ContactController::class, 'addTask']],
+    ['method' => 'POST', 'path' => '/contacts/{id}/deals', 'handler' => [ContactController::class, 'addDeal']],
     ['method' => 'PUT', 'path' => '/contacts/{id}', 'handler' => [ContactController::class, 'update']],
     ['method' => 'DELETE', 'path' => '/contacts/{id}', 'handler' => [ContactController::class, 'destroy']],
 

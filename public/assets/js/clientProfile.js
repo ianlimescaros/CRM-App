@@ -14,6 +14,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     const filesEl = document.getElementById('clientFiles');
     const summaryEl = document.getElementById('clientSummary');
     const addNoteBtn = document.getElementById('clientNoteAdd');
+    const tasksEl = document.getElementById('clientTasks');
+    const dealsEl = document.getElementById('clientDeals');
+    const quickTaskBtn = document.getElementById('clientQuickTask');
+    const quickDealBtn = document.getElementById('clientQuickDeal');
 
     const setLoading = (el, text = 'Loading...') => {
         if (!el) return;
@@ -60,7 +64,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         filesEl.innerHTML = items.map(f => `
             <div class="flex justify-between items-center bg-gray-50 border border-border rounded-card px-3 py-2 text-sm">
                 <span>${f.name}</span>
-                <span class="text-xs text-gray-500">${f.size} • ${f.updated_at}</span>
+                <span class="text-xs text-gray-500">${f.size_label || ''} • ${f.created_at || f.updated_at || ''}</span>
             </div>
         `).join('');
     };
@@ -90,11 +94,47 @@ document.addEventListener('DOMContentLoaded', async () => {
         initialsEl.textContent = parts.length ? (parts[0][0] || '') + (parts[1]?.[0] || '') : 'CP';
     };
 
+    const renderTasks = (items = []) => {
+        if (!tasksEl) return;
+        if (!items.length) {
+            tasksEl.innerHTML = '<div class="text-sm text-gray-500">No tasks linked.</div>';
+            return;
+        }
+        tasksEl.innerHTML = items.map(t => `
+            <div class="flex justify-between items-center border border-border rounded-card px-3 py-2 bg-gray-50">
+                <div>
+                    <div class="font-semibold">${t.title}</div>
+                    <div class="text-xs text-gray-500">${t.due_date || 'No due date'} • ${t.status}</div>
+                </div>
+                <span class="text-xs text-gray-500">#${t.id}</span>
+            </div>
+        `).join('');
+    };
+
+    const renderDeals = (items = []) => {
+        if (!dealsEl) return;
+        if (!items.length) {
+            dealsEl.innerHTML = '<div class="text-sm text-gray-500">No deals linked.</div>';
+            return;
+        }
+        dealsEl.innerHTML = items.map(d => `
+            <div class="flex justify-between items-center border border-border rounded-card px-3 py-2 bg-gray-50">
+                <div>
+                    <div class="font-semibold">${d.title}</div>
+                    <div class="text-xs text-gray-500">${d.stage} • $${Number(d.amount || 0).toLocaleString()}</div>
+                </div>
+                <span class="text-xs text-gray-500">#${d.id}</span>
+            </div>
+        `).join('');
+    };
+
     const loadContact = async () => {
         setLoading(timelineEl);
         setLoading(notesEl);
         setLoading(filesEl);
         setLoading(summaryEl);
+        setLoading(tasksEl);
+        setLoading(dealsEl);
 
         try {
             let detail;
@@ -114,15 +154,19 @@ document.addEventListener('DOMContentLoaded', async () => {
             const contact = detail.contact;
             renderHeader(contact);
 
-            const [timelineRes, notesRes, filesRes] = await Promise.all([
+            const [timelineRes, notesRes, filesRes, tasksRes, dealsRes] = await Promise.all([
                 apiClient.getContactTimeline(contact.id),
                 apiClient.getContactNotes(contact.id),
                 apiClient.getContactFiles(contact.id),
+                apiClient.listTasks({ contact_id: contact.id }),
+                apiClient.listDeals({ contact_id: contact.id }),
             ]);
 
             renderTimeline(timelineRes.timeline || []);
             renderNotes(notesRes.notes || []);
             renderFiles(filesRes.files || []);
+            renderTasks(tasksRes.tasks || tasksRes || []);
+            renderDeals(dealsRes.deals || dealsRes || []);
             renderSummary(contact, detail.stats || {}, timelineRes.timeline || []);
             return contact.id;
         } catch (err) {
@@ -151,5 +195,48 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (window.ui?.showToast) ui.showToast(err?.message || 'Failed to add note', 'error');
             }
         });
+    }
+
+    if (quickTaskBtn) {
+        quickTaskBtn.addEventListener('click', async () => {
+            if (!currentId) return;
+            const title = prompt('Task title for this contact:');
+            if (!title || !title.trim()) return;
+            try {
+                await apiClient.createTask({ title: title.trim(), contact_id: currentId, status: 'pending' });
+                if (window.ui?.showToast) ui.showToast('Task created', 'success');
+                const tasksRes = await apiClient.listTasks({ contact_id: currentId });
+                renderTasks(tasksRes.tasks || tasksRes || []);
+                ContactActivityRefresh(currentId);
+            } catch (err) {
+                if (window.ui?.showToast) ui.showToast(err?.message || 'Failed to create task', 'error');
+            }
+        });
+    }
+
+    if (quickDealBtn) {
+        quickDealBtn.addEventListener('click', async () => {
+            if (!currentId) return;
+            const title = prompt('Deal title for this contact:');
+            if (!title || !title.trim()) return;
+            try {
+                await apiClient.createDeal({ title: title.trim(), stage: 'prospecting', contact_id: currentId, amount: 0 });
+                if (window.ui?.showToast) ui.showToast('Deal created', 'success');
+                const dealsRes = await apiClient.listDeals({ contact_id: currentId });
+                renderDeals(dealsRes.deals || dealsRes || []);
+                ContactActivityRefresh(currentId);
+            } catch (err) {
+                if (window.ui?.showToast) ui.showToast(err?.message || 'Failed to create deal', 'error');
+            }
+        });
+    }
+
+    async function ContactActivityRefresh(id) {
+        try {
+            const timelineRes = await apiClient.getContactTimeline(id);
+            renderTimeline(timelineRes.timeline || []);
+        } catch (e) {
+            // ignore
+        }
     }
 });
