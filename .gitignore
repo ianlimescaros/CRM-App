@@ -1,0 +1,20 @@
+# Environment
+.env
+
+# Dependencies
+node_modules/
+vendor/
+
+# Logs
+storage/logs/*
+!storage/logs/.gitkeep
+
+# Build artifacts (remove if you want to commit built CSS/locks)
+public/assets/css/tailwind.css
+package-lock.json
+
+# OS/Editor
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
