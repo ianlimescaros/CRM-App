@@ -25,7 +25,7 @@ function confirmModal(message) {
             <div class="text-gray-600 text-sm mb-4">${message}</div>
             <div class="flex justify-end gap-2">
                 <button class="px-3 py-1 border rounded text-sm" data-action="cancel">Cancel</button>
-                <button class="px-3 py-1 bg-red-600 text-white rounded text-sm" data-action="ok">Delete</button>
+                <button class="px-3 py-1 bg-blue-600 text-white rounded text-sm" data-action="ok">Confirm</button>
             </div>
         `;
         inner.innerHTML = box.innerHTML;
