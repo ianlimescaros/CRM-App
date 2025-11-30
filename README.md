@@ -7,7 +7,7 @@ Lightweight CRM for real estate/sales teams with leads, contacts, deals, tasks, 
 - Leads/Contacts/Deals/Tasks CRUD; filters, bulk status (leads), table/Kanban (leads), list/calendar (tasks)
 - AI Assistant: summarize notes, suggest follow-up (configurable LLM API)
 - Dashboard & Reports with inline/Chart.js charts
-- Client Profile page (stubbed timeline/files/notes)
+- Client Profile page: detail, timeline (activities), notes, files (metadata), related tasks/deals, quick add task/deal, contact search/filter
 
 ## Stack
 - PHP 8.x, PDO/MySQL
@@ -53,7 +53,8 @@ Lightweight CRM for real estate/sales teams with leads, contacts, deals, tasks, 
 ## API (main endpoints)
 - Auth: `POST /auth/register`, `POST /auth/login`, `POST /auth/logout`
 - Leads: `GET/POST /leads`, `PUT/DELETE /leads/{id}`, `PATCH /leads/bulk`
-- Contacts: `GET/POST /contacts`, `PUT/DELETE /contacts/{id}`
+- Contacts: `GET/POST /contacts`, `PUT/DELETE /contacts/{id}`, search via `?search=`, detail `GET /contacts/{id}`
+- Contact profile extras: `GET /contacts/{id}/timeline`, `GET/POST /contacts/{id}/notes`, `GET/POST /contacts/{id}/files`, `POST /contacts/{id}/tasks`, `POST /contacts/{id}/deals`
 - Deals: `GET/POST /deals`, `PUT/DELETE /deals/{id}`
 - Tasks: `GET/POST /tasks`, `PUT/DELETE /tasks/{id}`
 - AI: `POST /ai/summarize`, `POST /ai/suggest-followup`
@@ -75,6 +76,5 @@ Pagination/sort: `page`, `per_page`, `sort`, `direction` supported on list endpo
 - Use HTTPS in production
 
 ## Known gaps
-- Client Profile data is stubbed (timeline/files/notes)
 - Charts use live endpoints but minimal filtering
 - Drag/drop Kanban updates lead status; other entities don’t have bulk actions yet
