@@ -1,52 +1,67 @@
-# CRM App (PHP + Tailwind)
+# CRM App (PHP + Tailwind + Chart.js)
 
-Lightweight CRM for real estate leads/deals/tasks with a PHP REST API, vanilla JS frontend, and optional LLM integration.
+Lightweight CRM for real estate/sales teams with leads, contacts, deals, tasks, AI assistant, and dashboards. Backend is PHP (no framework) with MySQL/PDO; frontend uses Tailwind CSS + vanilla JS; charts via Chart.js.
+
+## Features
+- Auth (register/login/logout) with token/session
+- Leads/Contacts/Deals/Tasks CRUD; filters, bulk status (leads), table/Kanban (leads), list/calendar (tasks)
+- AI Assistant: summarize notes, suggest follow-up (configurable LLM API)
+- Dashboard & Reports with inline/Chart.js charts
+- Client Profile page (stubbed timeline/files/notes)
 
 ## Stack
-- PHP 8.x (no framework), PDO/MySQL
-- Tailwind CSS (static build)
-- Vanilla JS (fetch API)
+- PHP 8.x, PDO/MySQL
+- Tailwind CSS (build via CLI), Chart.js (CDN)
+- Vanilla JS for UI, fetch API calls to `/api.php`
 
 ## Setup
-1) Copy `.env` from sample and set DB credentials & LLM keys.
-2) Create database and load schema:
-   ```bash
-   mysql -u YOUR_USER -pYOUR_PASS -e "CREATE DATABASE crm_app CHARACTER SET utf8mb4"
-   mysql -u YOUR_USER -pYOUR_PASS crm_app < sql/schema.sql
+1) Copy `.env` and set DB creds, APP_URL, LLM vars:
    ```
-3) Install composer autoload (optional but recommended):
-   ```bash
-   composer install
-   composer dump-autoload
+   DB_HOST=127.0.0.1
+   DB_PORT=3306
+   DB_NAME=crm_app
+   DB_USER=your_user
+   DB_PASS=your_pass
+   LLM_API_URL=https://api.openai.com/v1/chat/completions
+   LLM_API_KEY=sk-...
+   LLM_MODEL=gpt-4o
    ```
-4) Tailwind CSS (if customizing styles):
-   - Ensure `public/assets/css/tailwind.css` is built (configure Tailwind CLI if desired).
+2) Install PHP deps (optional autoload): `composer install`
+3) Build Tailwind: `npm install` then `npm run build:css`
+4) Import DB schema: `mysql -u user -p dbname < sql/schema.sql`
+5) Run locally: `php -S localhost:8000 -t public`
 
-## Run
-```bash
-php -S localhost:8000 -t public
-```
-Then open `http://localhost:8000/index.php?page=login`.
+## Deployment
+- Web root should point to `public/`; protect `storage`, `.env`, `sql`
+- Ensure PHP extensions: pdo_mysql, curl
+- Set file perms for `storage/logs/app.log`
+- For Apache use `.htaccess` provided; Nginx use `try_files` to `api.php`/`index.php`
 
-## API routes (major)
+## API (main endpoints)
 - Auth: `POST /auth/register`, `POST /auth/login`, `POST /auth/logout`
-- Leads: `GET/POST /leads`, `PUT/DELETE /leads/{id}`
+- Leads: `GET/POST /leads`, `PUT/DELETE /leads/{id}`, `PATCH /leads/bulk`
 - Contacts: `GET/POST /contacts`, `PUT/DELETE /contacts/{id}`
 - Deals: `GET/POST /deals`, `PUT/DELETE /deals/{id}`
 - Tasks: `GET/POST /tasks`, `PUT/DELETE /tasks/{id}`
-- (AI) `POST /ai/summarize`, `POST /ai/suggest-followup`
+- AI: `POST /ai/summarize`, `POST /ai/suggest-followup`
 
-All protected endpoints require `Authorization: Bearer <token>`.
+Pagination/sort: `page`, `per_page`, `sort`, `direction` supported on list endpoints.
 
-## Logging
-- File: `storage/logs/app.log`
-- Errors >= 500 auto-log via `Response::error` (uses `Logger` class).
+## Frontend notes
+- Pages in `public/views/`; JS in `public/assets/js/`
+- Styles from built `public/assets/css/tailwind.css`
+- Charts via Chart.js CDN; falls back to inline renderers if unavailable
 
-## Deployment (Apache/shared hosting)
-- Ensure `.htaccess` in `public/` is active for rewrites to `api.php` and `index.php`.
-- Deny web access to `/storage` and `/sql` (place outside web root if possible).
-- Set proper file permissions for `storage/logs/app.log`.
+## Development scripts
+- Build CSS: `npm run build:css`
+- Watch CSS: `npm run watch:css`
 
-## Notes
-- Frontend is minimal; extend Tailwind build and UI as needed.
-- AI endpoints depend on valid `LLM_API_URL` and `LLM_API_KEY` in `.env`.***
+## Security
+- SSL verification enforced for AI calls; set proper CA bundle on the server
+- Keep `.env` out of VCS and web root
+- Use HTTPS in production
+
+## Known gaps
+- Client Profile data is stubbed (timeline/files/notes)
+- Charts use live endpoints but minimal filtering
+- Drag/drop Kanban updates lead status; other entities don’t have bulk actions yet
