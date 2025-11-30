@@ -89,7 +89,7 @@
 </section>
 
 <!-- Quick Task Modal -->
-<div id="taskModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+<div id="taskModal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-50 p-4">
     <div class="bg-white rounded-card shadow-xl w-full max-w-lg p-5">
         <div class="flex items-center justify-between mb-3">
             <h3 class="text-lg font-semibold">Add Task for this contact</h3>
@@ -126,7 +126,7 @@
 </div>
 
 <!-- Quick Deal Modal -->
-<div id="dealModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+<div id="dealModal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-50 p-4">
     <div class="bg-white rounded-card shadow-xl w-full max-w-lg p-5">
         <div class="flex items-center justify-between mb-3">
             <h3 class="text-lg font-semibold">Add Deal for this contact</h3>
