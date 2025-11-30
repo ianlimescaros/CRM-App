@@ -5,9 +5,10 @@ Lightweight CRM for real estate/sales teams with leads, contacts, deals, tasks, 
 ## Features
 - Auth (register/login/logout) with token/session
 - Leads/Contacts/Deals/Tasks CRUD; filters, bulk status (leads), table/Kanban (leads), list/calendar (tasks)
+- Gradient-styled modals/forms across leads/contacts/deals/tasks + client profile
 - AI Assistant: summarize notes, suggest follow-up (configurable LLM API)
 - Dashboard & Reports with inline/Chart.js charts
-- Client Profile page: detail, timeline (activities), notes, files (metadata), related tasks/deals, quick add task/deal, contact search/filter
+- Client Profile page: detail, timeline (activities), notes, files upload/delete, related tasks/deals, quick add task/deal, contact search/filter
 
 ## Stack
 - PHP 8.x, PDO/MySQL
