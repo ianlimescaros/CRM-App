@@ -161,7 +161,7 @@ class ContactController
                 }
                 $relUrl = '/storage/uploads/contact_' . $id . '/' . $safeName;
                 $sizeLabel = $this->formatSize(filesize($targetPath));
-                $created = ContactFile::create((int)$user['id'], $id, $original, $relUrl, $sizeLabel);
+                $created = ContactFile::create((int)$user['id'], $id, $original, $relUrl, $sizeLabel, $targetPath);
                 ContactActivity::create((int)$user['id'], $id, 'note', 'File added: ' . $original);
                 Response::success(['file' => $created], 201);
             }
@@ -181,6 +181,24 @@ class ContactController
             );
             ContactActivity::create((int)$user['id'], $id, 'note', 'File added: ' . $name);
             Response::success(['file' => $created], 201);
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
+            $input = $this->getJsonInput();
+            $fileId = isset($input['file_id']) ? (int)$input['file_id'] : 0;
+            if (!$fileId) {
+                Response::error('Validation failed', 422, ['file_id' => 'file_id is required']);
+            }
+            $file = ContactFile::find((int)$user['id'], $id, $fileId);
+            if (!$file) {
+                Response::error('File not found', 404);
+            }
+            if (!empty($file['disk_path']) && file_exists($file['disk_path'])) {
+                @unlink($file['disk_path']);
+            }
+            ContactFile::deleteFile((int)$user['id'], $id, $fileId);
+            ContactActivity::create((int)$user['id'], $id, 'note', 'File deleted: ' . ($file['name'] ?? ''));
+            Response::success(['message' => 'File deleted']);
         }
 
         $files = ContactFile::listForContact((int)$user['id'], $id);

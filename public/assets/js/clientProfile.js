@@ -65,8 +65,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         filesEl.innerHTML = items.map(f => `
             <div class="flex justify-between items-center bg-gray-50 border border-border rounded-card px-3 py-2 text-sm">
-                <span>${f.name}</span>
-                <span class="text-xs text-gray-500">${f.size_label || ''} • ${f.created_at || f.updated_at || ''}</span>
+                <div>
+                    <div class="font-semibold">${f.name}</div>
+                    <div class="text-xs text-gray-500">${f.size_label || ''} ${f.created_at || f.updated_at || ''}</div>
+                </div>
+                <div class="flex items-center gap-2">
+                    ${f.url ? `<a href="${f.url}" target="_blank" class="text-blue-600 text-xs underline">View</a>` : ''}
+                    <button data-file-id="${f.id}" class="text-xs text-red-600 hover:text-red-800">Delete</button>
+                </div>
             </div>
         `).join('');
     };
@@ -262,6 +268,36 @@ document.addEventListener('DOMContentLoaded', async () => {
                 ContactActivityRefresh(currentId);
             } catch (err) {
                 if (window.ui?.showToast) ui.showToast(err?.message || 'Failed to upload', 'error');
+            }
+        });
+    }
+
+    if (filesEl) {
+        filesEl.addEventListener('click', async (e) => {
+            const btn = e.target.closest('button[data-file-id]');
+            if (!btn || !currentId) return;
+            const id = btn.dataset.fileId;
+            if (!id) return;
+            try {
+                await fetch(`/api.php/contacts/${currentId}/files`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...(apiClient.getToken() ? { 'Authorization': `Bearer ${apiClient.getToken()}` } : {})
+                    },
+                    body: JSON.stringify({ file_id: Number(id) })
+                }).then(async res => {
+                    if (!res.ok) {
+                        const data = await res.json().catch(() => ({}));
+                        throw new Error(data.message || 'Delete failed');
+                    }
+                });
+                if (window.ui?.showToast) ui.showToast('File deleted', 'success');
+                const filesRes = await apiClient.getContactFiles(currentId);
+                renderFiles(filesRes.files || []);
+                ContactActivityRefresh(currentId);
+            } catch (err) {
+                if (window.ui?.showToast) ui.showToast(err?.message || 'Failed to delete', 'error');
             }
         });
     }
