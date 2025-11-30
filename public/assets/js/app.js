@@ -172,6 +172,11 @@ async function initDashboard() {
         document.getElementById('statDeals').innerText = dealRes.deals.length;
         document.getElementById('statTasks').innerText = taskRes.tasks.length;
 
+        // simple WoW delta: current 7 days vs previous 7 days
+        setDelta('statLeadsDelta', leadRes.leads);
+        setDelta('statDealsDelta', dealRes.deals);
+        setDelta('statTasksDelta', taskRes.tasks);
+
         const recentLeads = leadRes.leads.slice(0, 5);
         document.getElementById('recentLeads').innerHTML = recentLeads.length
             ? recentLeads.map(l => `
@@ -221,6 +226,40 @@ async function initDashboard() {
     } catch (err) {
         ui.showToast('Failed to load dashboard', 'error');
     }
+}
+
+function setDelta(elId, items) {
+    const el = document.getElementById(elId);
+    if (!el) return;
+    const now = new Date();
+    const currentStart = new Date(now);
+    currentStart.setDate(now.getDate() - 7);
+    const prevStart = new Date(now);
+    prevStart.setDate(now.getDate() - 14);
+
+    const current = items.filter(i => isInRange(i.created_at, currentStart, now)).length;
+    const prev = items.filter(i => isInRange(i.created_at, prevStart, currentStart)).length;
+
+    let delta = 0;
+    if (prev === 0) {
+        delta = current > 0 ? 100 : 0;
+    } else {
+        delta = Math.round(((current - prev) / prev) * 100);
+    }
+    const sign = delta > 0 ? '+' : '';
+    el.textContent = `${sign}${delta}%`;
+    el.classList.remove('text-blue-700', 'text-emerald-700', 'text-amber-700', 'text-red-700', 'bg-blue-50', 'bg-emerald-50', 'bg-amber-50', 'bg-red-50');
+    let color = 'blue';
+    if (elId.includes('Deals')) color = 'emerald';
+    if (elId.includes('Tasks')) color = 'amber';
+    if (delta < 0) color = 'red';
+    el.classList.add(`text-${color}-700`, `bg-${color}-50`);
+}
+
+function isInRange(dateStr, start, end) {
+    if (!dateStr) return false;
+    const d = new Date(dateStr);
+    return d >= start && d <= end;
 }
 
 function initLeads() {

@@ -12,7 +12,7 @@
                 <div class="text-sm text-blue-700 flex items-center gap-2">
                     <span class="inline-block h-2.5 w-2.5 rounded-full bg-blue-500"></span>Leads
                 </div>
-                <span class="text-xs px-2 py-1 rounded-full bg-blue-50 text-blue-700">+0%</span>
+                <span id="statLeadsDelta" class="text-xs px-2 py-1 rounded-full bg-blue-50 text-blue-700">+0%</span>
             </div>
             <div id="statLeads" class="text-3xl font-bold text-blue-900 mt-2">0</div>
         </div>
@@ -21,7 +21,7 @@
                 <div class="text-sm text-emerald-700 flex items-center gap-2">
                     <span class="inline-block h-2.5 w-2.5 rounded-full bg-emerald-500"></span>Deals
                 </div>
-                <span class="text-xs px-2 py-1 rounded-full bg-emerald-50 text-emerald-700">+0%</span>
+                <span id="statDealsDelta" class="text-xs px-2 py-1 rounded-full bg-emerald-50 text-emerald-700">+0%</span>
             </div>
             <div id="statDeals" class="text-3xl font-bold text-emerald-900 mt-2">0</div>
         </div>
@@ -30,7 +30,7 @@
                 <div class="text-sm text-amber-700 flex items-center gap-2">
                     <span class="inline-block h-2.5 w-2.5 rounded-full bg-amber-500"></span>Tasks
                 </div>
-                <span class="text-xs px-2 py-1 rounded-full bg-amber-50 text-amber-700">+0%</span>
+                <span id="statTasksDelta" class="text-xs px-2 py-1 rounded-full bg-amber-50 text-amber-700">+0%</span>
             </div>
             <div id="statTasks" class="text-3xl font-bold text-amber-900 mt-2">0</div>
         </div>
