@@ -23,6 +23,7 @@ return [
     ['method' => 'GET', 'path' => '/contacts/{id}', 'handler' => [ContactController::class, 'show']],
     ['method' => 'GET', 'path' => '/contacts/{id}/timeline', 'handler' => [ContactController::class, 'timeline']],
     ['method' => 'GET', 'path' => '/contacts/{id}/files', 'handler' => [ContactController::class, 'files']],
+    ['method' => 'POST', 'path' => '/contacts/{id}/files', 'handler' => [ContactController::class, 'files']],
     ['method' => 'GET', 'path' => '/contacts/{id}/notes', 'handler' => [ContactController::class, 'notes']],
     ['method' => 'POST', 'path' => '/contacts/{id}/notes', 'handler' => [ContactController::class, 'notes']],
     ['method' => 'POST', 'path' => '/contacts/{id}/tasks', 'handler' => [ContactController::class, 'addTask']],

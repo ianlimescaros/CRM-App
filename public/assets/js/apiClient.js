@@ -59,6 +59,7 @@ const apiClient = {
     getContact: (id) => request(`/contacts/${id}`),
     getContactTimeline: (id) => request(`/contacts/${id}/timeline`),
     getContactFiles: (id) => request(`/contacts/${id}/files`),
+    addContactFile: (id, payload) => request(`/contacts/${id}/files`, { method: 'POST', body: payload }),
     getContactNotes: (id) => request(`/contacts/${id}/notes`),
     addContactNote: (id, content) => request(`/contacts/${id}/notes`, { method: 'POST', body: { content } }),
     createContact: (payload) => request('/contacts', { method: 'POST', body: payload }),

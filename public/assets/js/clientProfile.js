@@ -18,6 +18,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const dealsEl = document.getElementById('clientDeals');
     const quickTaskBtn = document.getElementById('clientQuickTask');
     const quickDealBtn = document.getElementById('clientQuickDeal');
+    const uploadBtn = document.getElementById('clientFileAdd');
 
     const setLoading = (el, text = 'Loading...') => {
         if (!el) return;
@@ -227,6 +228,25 @@ document.addEventListener('DOMContentLoaded', async () => {
                 ContactActivityRefresh(currentId);
             } catch (err) {
                 if (window.ui?.showToast) ui.showToast(err?.message || 'Failed to create deal', 'error');
+            }
+        });
+    }
+
+    if (uploadBtn) {
+        uploadBtn.addEventListener('click', async () => {
+            if (!currentId) return;
+            const name = prompt('File name (metadata only):');
+            if (!name || !name.trim()) return;
+            const url = prompt('Optional URL (if hosted):', '');
+            const sizeLabel = prompt('Optional size label (e.g., 1.2MB):', '');
+            try {
+                await apiClient.addContactFile(currentId, { name: name.trim(), url: url || null, size_label: sizeLabel || null });
+                if (window.ui?.showToast) ui.showToast('File added', 'success');
+                const filesRes = await apiClient.getContactFiles(currentId);
+                renderFiles(filesRes.files || []);
+                ContactActivityRefresh(currentId);
+            } catch (err) {
+                if (window.ui?.showToast) ui.showToast(err?.message || 'Failed to add file', 'error');
             }
         });
     }

@@ -146,6 +146,23 @@ class ContactController
             Response::error('Contact not found', 404);
         }
 
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $input = $this->getJsonInput();
+            $name = trim($input['name'] ?? '');
+            if ($name === '') {
+                Response::error('Validation failed', 422, ['name' => 'File name is required.']);
+            }
+            $created = ContactFile::create(
+                (int)$user['id'],
+                $id,
+                $name,
+                $input['url'] ?? null,
+                $input['size_label'] ?? null
+            );
+            ContactActivity::create((int)$user['id'], $id, 'note', 'File added: ' . $name);
+            Response::success(['file' => $created], 201);
+        }
+
         $files = ContactFile::listForContact((int)$user['id'], $id);
         Response::success(['files' => $files]);
     }
