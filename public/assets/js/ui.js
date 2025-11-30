@@ -15,9 +15,11 @@ function toggle(el, show) {
 function confirmModal(message) {
     return new Promise((resolve) => {
         const overlay = document.createElement('div');
-        overlay.className = 'fixed inset-0 bg-black/40 flex items-center justify-center z-50';
+        overlay.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4';
         const box = document.createElement('div');
-        box.className = 'bg-white rounded shadow-lg p-5 w-80';
+        box.className = 'bg-gradient-to-r from-blue-500 via-purple-500 to-emerald-500 p-[1px] rounded-2xl shadow-2xl w-full max-w-sm';
+        const inner = document.createElement('div');
+        inner.className = 'bg-white rounded-2xl p-5';
         box.innerHTML = `
             <div class="text-gray-800 font-semibold mb-2">Confirm</div>
             <div class="text-gray-600 text-sm mb-4">${message}</div>
@@ -26,6 +28,9 @@ function confirmModal(message) {
                 <button class="px-3 py-1 bg-red-600 text-white rounded text-sm" data-action="ok">Delete</button>
             </div>
         `;
+        inner.innerHTML = box.innerHTML;
+        box.innerHTML = '';
+        box.appendChild(inner);
         overlay.appendChild(box);
         document.body.appendChild(overlay);
         overlay.addEventListener('click', (e) => {
