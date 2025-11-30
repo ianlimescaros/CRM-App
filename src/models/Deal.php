@@ -13,6 +13,14 @@ class Deal
             $sql .= ' AND stage = :stage';
             $params[':stage'] = $filters['stage'];
         }
+        if (!empty($filters['contact_id'])) {
+            $sql .= ' AND contact_id = :contact_id';
+            $params[':contact_id'] = (int)$filters['contact_id'];
+        }
+        if (!empty($filters['lead_id'])) {
+            $sql .= ' AND lead_id = :lead_id';
+            $params[':lead_id'] = (int)$filters['lead_id'];
+        }
 
         $orderBy = $pagination['order_by'] ?? 'created_at';
         $orderDir = strtoupper($pagination['order_dir'] ?? 'DESC');
@@ -44,6 +52,14 @@ class Deal
         if (!empty($filters['stage'])) {
             $sql .= ' AND stage = :stage';
             $params[':stage'] = $filters['stage'];
+        }
+        if (!empty($filters['contact_id'])) {
+            $sql .= ' AND contact_id = :contact_id';
+            $params[':contact_id'] = (int)$filters['contact_id'];
+        }
+        if (!empty($filters['lead_id'])) {
+            $sql .= ' AND lead_id = :lead_id';
+            $params[':lead_id'] = (int)$filters['lead_id'];
         }
         $stmt = db()->prepare($sql);
         $stmt->execute($params);

@@ -4,6 +4,9 @@ require_once __DIR__ . '/../middleware/AuthMiddleware.php';
 require_once __DIR__ . '/../services/Response.php';
 require_once __DIR__ . '/../services/Validator.php';
 require_once __DIR__ . '/../models/Contact.php';
+require_once __DIR__ . '/../models/Lead.php';
+require_once __DIR__ . '/../models/Deal.php';
+require_once __DIR__ . '/../models/Task.php';
 
 class ContactController
 {
@@ -92,6 +95,89 @@ class ContactController
             Response::error('Contact not found', 404);
         }
         Response::success(['message' => 'Contact deleted']);
+    }
+
+    public function show(int $id): void
+    {
+        $user = AuthMiddleware::require();
+        $contact = Contact::find((int)$user['id'], $id);
+        if (!$contact) {
+            Response::error('Contact not found', 404);
+        }
+
+        $dealsCount = Deal::countAll((int)$user['id'], ['contact_id' => $id]);
+        $tasksCount = Task::countAll((int)$user['id'], ['contact_id' => $id]);
+        $leadCount = Lead::countAll((int)$user['id'], []);
+
+        Response::success([
+            'contact' => $contact,
+            'stats' => [
+                'deals' => $dealsCount,
+                'tasks' => $tasksCount,
+                'leads' => $leadCount,
+            ],
+        ]);
+    }
+
+    public function timeline(int $id): void
+    {
+        $user = AuthMiddleware::require();
+        $contact = Contact::find((int)$user['id'], $id);
+        if (!$contact) {
+            Response::error('Contact not found', 404);
+        }
+
+        $timeline = [
+            ['at' => date('Y-m-d'), 'type' => 'call', 'detail' => 'Discussed next steps and budget alignment'],
+            ['at' => date('Y-m-d', strtotime('-2 days')), 'type' => 'email', 'detail' => 'Shared property shortlist and brochure'],
+            ['at' => date('Y-m-d', strtotime('-5 days')), 'type' => 'meeting', 'detail' => 'Initial consultation completed'],
+        ];
+
+        Response::success(['timeline' => $timeline]);
+    }
+
+    public function files(int $id): void
+    {
+        $user = AuthMiddleware::require();
+        $contact = Contact::find((int)$user['id'], $id);
+        if (!$contact) {
+            Response::error('Contact not found', 404);
+        }
+
+        $files = [
+            ['name' => 'Brochure.pdf', 'size' => '1.2MB', 'updated_at' => date('Y-m-d', strtotime('-1 day'))],
+            ['name' => 'Floorplan.png', 'size' => '820KB', 'updated_at' => date('Y-m-d', strtotime('-3 days'))],
+        ];
+
+        Response::success(['files' => $files]);
+    }
+
+    public function notes(int $id): void
+    {
+        $user = AuthMiddleware::require();
+        $contact = Contact::find((int)$user['id'], $id);
+        if (!$contact) {
+            Response::error('Contact not found', 404);
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $input = $this->getJsonInput();
+            $note = trim($input['content'] ?? '');
+            if ($note === '') {
+                Response::error('Validation failed', 422, ['content' => 'Note content is required.']);
+            }
+            $newNote = [
+                'content' => $note,
+                'created_at' => date('Y-m-d H:i:s'),
+            ];
+            Response::success(['note' => $newNote], 201);
+        }
+
+        $notes = [
+            ['content' => 'Prefers email; interested in 3-bed units.', 'created_at' => date('Y-m-d', strtotime('-2 days'))],
+            ['content' => 'Budget flexible if location is prime.', 'created_at' => date('Y-m-d', strtotime('-5 days'))],
+        ];
+        Response::success(['notes' => $notes]);
     }
 
     private function getJsonInput(): array

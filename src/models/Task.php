@@ -17,6 +17,14 @@ class Task
             $sql .= ' AND due_date = :due_date';
             $params[':due_date'] = $filters['due_date'];
         }
+        if (!empty($filters['contact_id'])) {
+            $sql .= ' AND contact_id = :contact_id';
+            $params[':contact_id'] = (int)$filters['contact_id'];
+        }
+        if (!empty($filters['lead_id'])) {
+            $sql .= ' AND lead_id = :lead_id';
+            $params[':lead_id'] = (int)$filters['lead_id'];
+        }
 
         $orderBy = $pagination['order_by'] ?? 'due_date';
         $orderDir = strtoupper($pagination['order_dir'] ?? 'ASC');
@@ -52,6 +60,14 @@ class Task
         if (!empty($filters['due_date'])) {
             $sql .= ' AND due_date = :due_date';
             $params[':due_date'] = $filters['due_date'];
+        }
+        if (!empty($filters['contact_id'])) {
+            $sql .= ' AND contact_id = :contact_id';
+            $params[':contact_id'] = (int)$filters['contact_id'];
+        }
+        if (!empty($filters['lead_id'])) {
+            $sql .= ' AND lead_id = :lead_id';
+            $params[':lead_id'] = (int)$filters['lead_id'];
         }
         $stmt = db()->prepare($sql);
         $stmt->execute($params);

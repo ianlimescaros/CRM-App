@@ -51,7 +51,16 @@ const apiClient = {
     deleteLead: (id) => request(`/leads/${id}`, { method: 'DELETE' }),
     bulkUpdateLeads: (ids, status) => request('/leads/bulk', { method: 'PATCH', body: { ids, status } }),
 
-    listContacts: () => request('/contacts'),
+    listContacts: (filters = {}) => {
+        const params = new URLSearchParams(filters);
+        const qs = params.toString() ? `?${params.toString()}` : '';
+        return request(`/contacts${qs}`);
+    },
+    getContact: (id) => request(`/contacts/${id}`),
+    getContactTimeline: (id) => request(`/contacts/${id}/timeline`),
+    getContactFiles: (id) => request(`/contacts/${id}/files`),
+    getContactNotes: (id) => request(`/contacts/${id}/notes`),
+    addContactNote: (id, content) => request(`/contacts/${id}/notes`, { method: 'POST', body: { content } }),
     createContact: (payload) => request('/contacts', { method: 'POST', body: payload }),
     updateContact: (id, payload) => request(`/contacts/${id}`, { method: 'PUT', body: payload }),
     deleteContact: (id) => request(`/contacts/${id}`, { method: 'DELETE' }),

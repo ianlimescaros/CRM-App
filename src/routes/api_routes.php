@@ -20,6 +20,11 @@ return [
 
     ['method' => 'GET', 'path' => '/contacts', 'handler' => [ContactController::class, 'index']],
     ['method' => 'POST', 'path' => '/contacts', 'handler' => [ContactController::class, 'store']],
+    ['method' => 'GET', 'path' => '/contacts/{id}', 'handler' => [ContactController::class, 'show']],
+    ['method' => 'GET', 'path' => '/contacts/{id}/timeline', 'handler' => [ContactController::class, 'timeline']],
+    ['method' => 'GET', 'path' => '/contacts/{id}/files', 'handler' => [ContactController::class, 'files']],
+    ['method' => 'GET', 'path' => '/contacts/{id}/notes', 'handler' => [ContactController::class, 'notes']],
+    ['method' => 'POST', 'path' => '/contacts/{id}/notes', 'handler' => [ContactController::class, 'notes']],
     ['method' => 'PUT', 'path' => '/contacts/{id}', 'handler' => [ContactController::class, 'update']],
     ['method' => 'DELETE', 'path' => '/contacts/{id}', 'handler' => [ContactController::class, 'destroy']],
 
