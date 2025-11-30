@@ -1,0 +1,156 @@
+<section data-page="leads">
+    <div class="flex justify-between items-center mb-4">
+        <div class="flex items-center gap-3">
+            <h1 class="text-2xl font-semibold">Leads</h1>
+            <div class="flex border border-border rounded-card overflow-hidden text-sm">
+                <button id="leadViewTable" class="px-3 py-2 bg-accent text-white">Table</button>
+                <button id="leadViewKanban" class="px-3 py-2 text-gray-700 hover:bg-gray-100">Kanban</button>
+            </div>
+        </div>
+        <button id="leadAddBtn" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">Add Lead</button>
+    </div>
+    <div class="flex gap-2 mb-4 flex-wrap">
+        <select id="leadStatusFilter" class="border border-border px-3 py-2 rounded text-sm focus:outline-none focus:ring-2 focus:ring-accent/30">
+            <option value="">All statuses</option>
+            <option value="new">New</option>
+            <option value="contacted">Contacted</option>
+            <option value="qualified">Qualified</option>
+            <option value="lost">Lost</option>
+            <option value="won">Won</option>
+        </select>
+        <input id="leadSourceFilter" placeholder="Source" class="border border-border px-3 py-2 rounded text-sm focus:outline-none focus:ring-2 focus:ring-accent/30">
+        <button id="leadFilterBtn" class="px-3 py-2 border border-border rounded text-sm hover:bg-gray-100 transition">Filter</button>
+        <select id="leadSort" class="border border-border px-3 py-2 rounded text-sm focus:outline-none focus:ring-2 focus:ring-accent/30">
+            <option value="created_at:DESC">Newest</option>
+            <option value="created_at:ASC">Oldest</option>
+            <option value="name:ASC">Name A-Z</option>
+            <option value="name:DESC">Name Z-A</option>
+            <option value="last_contact_at:DESC">Last contact</option>
+        </select>
+    </div>
+    <div class="flex items-center gap-2 mb-3 text-sm">
+        <input type="checkbox" id="leadSelectAll" class="h-4 w-4 border border-border rounded">
+        <span class="text-gray-600">Select all</span>
+        <select id="leadBulkStatus" class="border border-border px-3 py-2 rounded text-sm focus:outline-none focus:ring-2 focus:ring-accent/30">
+            <option value="">Bulk status…</option>
+            <option value="new">New</option>
+            <option value="contacted">Contacted</option>
+            <option value="qualified">Qualified</option>
+            <option value="lost">Lost</option>
+            <option value="won">Won</option>
+        </select>
+        <button id="leadBulkApply" class="px-3 py-2 border border-border rounded text-sm hover:bg-gray-100 transition">Apply</button>
+    </div>
+    <div id="leadTableWrap" class="bg-white border border-border rounded-card shadow-card overflow-x-auto">
+        <table class="min-w-full text-sm">
+            <thead class="bg-gray-100 sticky top-0 z-10">
+                <tr>
+                    <th class="px-3 py-2 text-left"><input type="checkbox" id="leadHeaderCheckbox" class="h-4 w-4 border border-border rounded"></th>
+                    <th class="px-3 py-2 text-left">Name</th>
+                    <th class="px-3 py-2 text-left">Status</th>
+                    <th class="px-3 py-2 text-left">Source</th>
+                    <th class="px-3 py-2 text-left">Owner</th>
+                    <th class="px-3 py-2 text-left">Last Contact</th>
+                    <th class="px-3 py-2 text-left">Budget</th>
+                    <th class="px-3 py-2 text-left">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="leadsTableBody"></tbody>
+        </table>
+    </div>
+    <div id="leadPagination" class="mt-2"></div>
+
+    <div id="leadKanban" class="hidden mt-4">
+        <div class="grid gap-3 md:grid-cols-3 xl:grid-cols-5">
+            <div class="bg-white border border-border rounded-card shadow-card p-3" data-status="new">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="font-semibold text-sm">New</h3>
+                    <span class="text-xs text-gray-500" data-count="new">0</span>
+                </div>
+                <div class="space-y-2" data-column="new"></div>
+            </div>
+            <div class="bg-white border border-border rounded-card shadow-card p-3" data-status="contacted">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="font-semibold text-sm">Contacted</h3>
+                    <span class="text-xs text-gray-500" data-count="contacted">0</span>
+                </div>
+                <div class="space-y-2" data-column="contacted"></div>
+            </div>
+            <div class="bg-white border border-border rounded-card shadow-card p-3" data-status="qualified">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="font-semibold text-sm">Qualified</h3>
+                    <span class="text-xs text-gray-500" data-count="qualified">0</span>
+                </div>
+                <div class="space-y-2" data-column="qualified"></div>
+            </div>
+            <div class="bg-white border border-border rounded-card shadow-card p-3" data-status="won">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="font-semibold text-sm">Won</h3>
+                    <span class="text-xs text-gray-500" data-count="won">0</span>
+                </div>
+                <div class="space-y-2" data-column="won"></div>
+            </div>
+            <div class="bg-white border border-border rounded-card shadow-card p-3" data-status="lost">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="font-semibold text-sm">Lost</h3>
+                    <span class="text-xs text-gray-500" data-count="lost">0</span>
+                </div>
+                <div class="space-y-2" data-column="lost"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="leadFormContainer" class="mt-4 hidden">
+        <h2 class="text-xl font-semibold mb-2" id="leadFormTitle">New Lead</h2>
+        <form id="leadForm" class="grid gap-3 sm:grid-cols-2">
+            <div id="leadFormError" class="sm:col-span-2 text-sm text-red-600 hidden"></div>
+            <input type="hidden" name="id">
+            <div class="sm:col-span-2">
+                <label class="block text-sm">Name</label>
+                <input name="name" class="w-full border border-border px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-accent/30" required>
+            </div>
+            <div>
+                <label class="block text-sm">Owner ID</label>
+                <input name="owner_id" class="w-full border border-border px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-accent/30" type="number">
+            </div>
+            <div>
+                <label class="block text-sm">Email</label>
+                <input name="email" class="w-full border border-border px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-accent/30" type="email">
+            </div>
+            <div>
+                <label class="block text-sm">Phone</label>
+                <input name="phone" class="w-full border border-border px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-accent/30">
+            </div>
+            <div>
+                <label class="block text-sm">Status</label>
+                <select name="status" class="w-full border border-border px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-accent/30">
+                    <option value="new">New</option>
+                    <option value="contacted">Contacted</option>
+                    <option value="qualified">Qualified</option>
+                    <option value="lost">Lost</option>
+                    <option value="won">Won</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm">Source</label>
+                <input name="source" class="w-full border border-border px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-accent/30">
+            </div>
+            <div>
+                <label class="block text-sm">Budget</label>
+                <input name="budget" class="w-full border border-border px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-accent/30" type="number" step="0.01">
+            </div>
+            <div>
+                <label class="block text-sm">Last Contact</label>
+                <input name="last_contact_at" class="w-full border border-border px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-accent/30" type="date">
+            </div>
+            <div class="sm:col-span-2">
+                <label class="block text-sm">Notes</label>
+                <textarea name="notes" class="w-full border border-border px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-accent/30"></textarea>
+            </div>
+            <div class="sm:col-span-2 flex gap-2">
+                <button class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition" type="submit">Save</button>
+                <button class="px-4 py-2 border border-border rounded hover:bg-gray-100 transition" type="button" id="leadFormCancel">Cancel</button>
+            </div>
+        </form>
+    </div>
+</section>

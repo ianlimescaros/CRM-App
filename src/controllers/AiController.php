@@ -1,0 +1,63 @@
+<?php
+
+require_once __DIR__ . '/../middleware/AuthMiddleware.php';
+require_once __DIR__ . '/../services/Response.php';
+require_once __DIR__ . '/../services/Validator.php';
+require_once __DIR__ . '/../services/AiService.php';
+
+class AiController
+{
+    private AiService $ai;
+
+    public function __construct()
+    {
+        $this->ai = new AiService();
+    }
+
+    public function summarize(): void
+    {
+        AuthMiddleware::require();
+        $input = $this->getJsonInput();
+        $errors = Validator::required($input, ['notes']);
+        $errors = array_merge($errors, Validator::stringLength((string)($input['notes'] ?? ''), 'notes', 1, 4000));
+        if ($errors) {
+            Response::error('Validation failed', 422, $errors);
+        }
+
+        $result = $this->ai->summarizeNotes($input['notes']);
+        if (isset($result['error'])) {
+            Response::error($result['error'], 502);
+        }
+
+        Response::success(['summary' => $result['text']]);
+    }
+
+    public function suggestFollowup(): void
+    {
+        AuthMiddleware::require();
+        $input = $this->getJsonInput();
+        $errors = Validator::required($input, ['lead_name', 'context']);
+        $errors = array_merge(
+            $errors,
+            Validator::stringLength((string)($input['lead_name'] ?? ''), 'lead_name', 1, 200),
+            Validator::stringLength((string)($input['context'] ?? ''), 'context', 1, 4000)
+        );
+        if ($errors) {
+            Response::error('Validation failed', 422, $errors);
+        }
+
+        $result = $this->ai->suggestFollowup($input['lead_name'], $input['context']);
+        if (isset($result['error'])) {
+            Response::error($result['error'], 502);
+        }
+
+        Response::success(['message' => $result['text']]);
+    }
+
+    private function getJsonInput(): array
+    {
+        $raw = file_get_contents('php://input');
+        $data = json_decode($raw, true);
+        return is_array($data) ? $data : [];
+    }
+}

@@ -1,0 +1,11 @@
+{
+  "name": "crm/app",
+  "description": "Lightweight PHP CRM backend",
+  "type": "project",
+  "require": {},
+  "autoload": {
+    "psr-4": {
+      "": "src/"
+    }
+  }
+}
