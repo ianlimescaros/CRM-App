@@ -90,77 +90,81 @@
 
 <!-- Quick Task Modal -->
 <div id="taskModal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-card shadow-xl w-full max-w-lg p-5">
-        <div class="flex items-center justify-between mb-3">
-            <h3 class="text-lg font-semibold">Add Task for this contact</h3>
-            <button data-close-task class="text-gray-500 hover:text-gray-700">✕</button>
-        </div>
-        <div class="space-y-3">
-            <div>
-                <label class="text-sm text-gray-700">Title</label>
-                <input id="taskTitle" class="w-full border border-border rounded px-3 py-2" placeholder="Follow-up call" />
+    <div class="bg-gradient-to-r from-blue-500 via-purple-500 to-emerald-500 p-[1px] rounded-card shadow-2xl w-full max-w-lg">
+        <div class="bg-white rounded-card p-5">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="text-lg font-semibold">Add Task for this contact</h3>
+                <button data-close-task class="text-gray-500 hover:text-gray-700">✕</button>
             </div>
-            <div>
-                <label class="text-sm text-gray-700">Description</label>
-                <textarea id="taskDesc" class="w-full border border-border rounded px-3 py-2" rows="2" placeholder="Details (optional)"></textarea>
-            </div>
-            <div class="grid grid-cols-2 gap-3">
+            <div class="space-y-3">
                 <div>
-                    <label class="text-sm text-gray-700">Due date</label>
-                    <input id="taskDue" type="date" class="w-full border border-border rounded px-3 py-2" />
+                    <label class="text-sm text-gray-700">Title</label>
+                    <input id="taskTitle" class="w-full border border-border rounded px-3 py-2" placeholder="Follow-up call" />
                 </div>
                 <div>
-                    <label class="text-sm text-gray-700">Status</label>
-                    <select id="taskStatus" class="w-full border border-border rounded px-3 py-2">
-                        <option value="pending">Pending</option>
-                        <option value="done">Done</option>
-                    </select>
+                    <label class="text-sm text-gray-700">Description</label>
+                    <textarea id="taskDesc" class="w-full border border-border rounded px-3 py-2" rows="2" placeholder="Details (optional)"></textarea>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-sm text-gray-700">Due date</label>
+                        <input id="taskDue" type="date" class="w-full border border-border rounded px-3 py-2" />
+                    </div>
+                    <div>
+                        <label class="text-sm text-gray-700">Status</label>
+                        <select id="taskStatus" class="w-full border border-border rounded px-3 py-2">
+                            <option value="pending">Pending</option>
+                            <option value="done">Done</option>
+                        </select>
+                    </div>
                 </div>
             </div>
-        </div>
-        <div class="mt-4 flex justify-end gap-2">
-            <button data-close-task class="px-3 py-2 border border-border rounded text-sm">Cancel</button>
-            <button id="taskSubmit" class="px-4 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">Save task</button>
+            <div class="mt-4 flex justify-end gap-2">
+                <button data-close-task class="px-3 py-2 border border-border rounded text-sm">Cancel</button>
+                <button id="taskSubmit" class="px-4 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">Save task</button>
+            </div>
         </div>
     </div>
 </div>
 
 <!-- Quick Deal Modal -->
 <div id="dealModal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-card shadow-xl w-full max-w-lg p-5">
-        <div class="flex items-center justify-between mb-3">
-            <h3 class="text-lg font-semibold">Add Deal for this contact</h3>
-            <button data-close-deal class="text-gray-500 hover:text-gray-700">✕</button>
-        </div>
-        <div class="space-y-3">
-            <div>
-                <label class="text-sm text-gray-700">Title</label>
-                <input id="dealTitle" class="w-full border border-border rounded px-3 py-2" placeholder="Deal title" />
+    <div class="bg-gradient-to-r from-blue-500 via-purple-500 to-emerald-500 p-[1px] rounded-card shadow-2xl w-full max-w-lg">
+        <div class="bg-white rounded-card p-5">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="text-lg font-semibold">Add Deal for this contact</h3>
+                <button data-close-deal class="text-gray-500 hover:text-gray-700">✕</button>
             </div>
-            <div class="grid grid-cols-2 gap-3">
+            <div class="space-y-3">
                 <div>
-                    <label class="text-sm text-gray-700">Amount</label>
-                    <input id="dealAmount" type="number" step="0.01" class="w-full border border-border rounded px-3 py-2" placeholder="0.00" />
+                    <label class="text-sm text-gray-700">Title</label>
+                    <input id="dealTitle" class="w-full border border-border rounded px-3 py-2" placeholder="Deal title" />
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-sm text-gray-700">Amount</label>
+                        <input id="dealAmount" type="number" step="0.01" class="w-full border border-border rounded px-3 py-2" placeholder="0.00" />
+                    </div>
+                    <div>
+                        <label class="text-sm text-gray-700">Stage</label>
+                        <select id="dealStage" class="w-full border border-border rounded px-3 py-2">
+                            <option value="prospecting">Prospecting</option>
+                            <option value="proposal">Proposal</option>
+                            <option value="negotiation">Negotiation</option>
+                            <option value="closed_won">Closed Won</option>
+                            <option value="closed_lost">Closed Lost</option>
+                        </select>
+                    </div>
                 </div>
                 <div>
-                    <label class="text-sm text-gray-700">Stage</label>
-                    <select id="dealStage" class="w-full border border-border rounded px-3 py-2">
-                        <option value="prospecting">Prospecting</option>
-                        <option value="proposal">Proposal</option>
-                        <option value="negotiation">Negotiation</option>
-                        <option value="closed_won">Closed Won</option>
-                        <option value="closed_lost">Closed Lost</option>
-                    </select>
+                    <label class="text-sm text-gray-700">Close date</label>
+                    <input id="dealClose" type="date" class="w-full border border-border rounded px-3 py-2" />
                 </div>
             </div>
-            <div>
-                <label class="text-sm text-gray-700">Close date</label>
-                <input id="dealClose" type="date" class="w-full border border-border rounded px-3 py-2" />
+            <div class="mt-4 flex justify-end gap-2">
+                <button data-close-deal class="px-3 py-2 border border-border rounded text-sm">Cancel</button>
+                <button id="dealSubmit" class="px-4 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">Save deal</button>
             </div>
-        </div>
-        <div class="mt-4 flex justify-end gap-2">
-            <button data-close-deal class="px-3 py-2 border border-border rounded text-sm">Cancel</button>
-            <button id="dealSubmit" class="px-4 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">Save deal</button>
         </div>
     </div>
 </div>
