@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CRM App Showcase</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.4.13/dist/tailwind.min.css" rel="stylesheet">
+  <style>
+    body { background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 40%, #f8fafc 100%); }
+  </style>
+</head>
+<body class="min-h-screen text-slate-900">
+  <header class="border-b border-slate-200 bg-white/80 backdrop-blur">
+    <div class="mx-auto max-w-6xl px-4 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <span class="h-9 w-9 rounded-2xl bg-blue-600 text-white grid place-items-center font-semibold">CRM</span>
+        <div>
+          <p class="text-lg font-semibold text-slate-900">CRM App</p>
+          <p class="text-sm text-slate-500">PHP + Tailwind + Chart.js + AI assistant</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <a href="https://github.com/ianlimescaros/CRM-App" class="px-4 py-2 rounded-xl border border-slate-200 text-sm font-medium text-slate-700 hover:border-slate-300 hover:bg-slate-50">View Code</a>
+        <a href="#gallery" class="px-4 py-2 rounded-xl bg-blue-600 text-white text-sm font-semibold shadow-sm hover:bg-blue-700">See Screens</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="mx-auto max-w-6xl px-4 py-10 space-y-12">
+    <section class="grid gap-8 lg:grid-cols-2 items-center">
+      <div class="space-y-4">
+        <p class="text-xs uppercase tracking-[0.2em] text-blue-600 font-semibold">Showcase</p>
+        <h1 class="text-3xl lg:text-4xl font-semibold text-slate-900 leading-tight">Modern CRM for real estate and sales teams.</h1>
+        <p class="text-slate-600 text-base leading-relaxed">Lightweight PHP backend, Tailwind UI, Chart.js dashboards, AI assistant for summaries and follow-ups, plus Kanban for leads and calendar for tasks.</p>
+        <div class="flex flex-wrap gap-3">
+          <div class="px-4 py-2 rounded-xl bg-white border border-slate-200 shadow-sm text-sm text-slate-700">Leads & Deals</div>
+          <div class="px-4 py-2 rounded-xl bg-white border border-slate-200 shadow-sm text-sm text-slate-700">Tasks & Calendar</div>
+          <div class="px-4 py-2 rounded-xl bg-white border border-slate-200 shadow-sm text-sm text-slate-700">AI Assistant</div>
+          <div class="px-4 py-2 rounded-xl bg-white border border-slate-200 shadow-sm text-sm text-slate-700">Reports</div>
+        </div>
+        <div class="flex items-center gap-3 pt-2">
+          <a href="https://github.com/ianlimescaros/CRM-App" class="px-4 py-2 rounded-xl bg-blue-600 text-white text-sm font-semibold shadow-sm hover:bg-blue-700">Clone the repo</a>
+          <a href="#run" class="text-sm font-medium text-blue-700 hover:text-blue-800">How to run locally</a>
+        </div>
+      </div>
+      <div class="relative">
+        <div class="absolute -inset-4 rounded-3xl bg-gradient-to-br from-blue-100 via-indigo-50 to-white blur-2xl"></div>
+        <div class="relative rounded-2xl border border-slate-200 bg-white shadow-xl overflow-hidden">
+          <div class="px-4 py-3 border-b border-slate-100 flex items-center gap-2">
+            <span class="h-3 w-3 rounded-full bg-rose-400"></span>
+            <span class="h-3 w-3 rounded-full bg-amber-300"></span>
+            <span class="h-3 w-3 rounded-full bg-emerald-400"></span>
+            <p class="text-sm font-medium text-slate-700">Dashboard preview</p>
+          </div>
+          <div class="bg-slate-50 aspect-video grid place-items-center text-slate-400 text-sm">
+            <p>Drop a screenshot at <code class="bg-slate-200 px-2 py-1 rounded">assets/demo/dashboard.png</code> and link it here.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="gallery" class="space-y-4">
+      <div class="flex items-center justify-between">
+        <h2 class="text-xl font-semibold text-slate-900">Screens</h2>
+        <p class="text-sm text-slate-500">Add your captures to <code class="bg-slate-200 px-2 py-1 rounded">assets/demo/</code> and update the links.</p>
+      </div>
+      <div class="grid gap-6 md:grid-cols-2">
+        <figure class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+          <img src="../assets/demo/dashboard.png" alt="Dashboard" class="w-full h-64 object-cover bg-slate-100">
+          <figcaption class="p-4 text-sm text-slate-600">Dashboard KPIs, charts, recent leads, and tasks.</figcaption>
+        </figure>
+        <figure class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+          <img src="../assets/demo/leads-kanban.png" alt="Leads Kanban" class="w-full h-64 object-cover bg-slate-100">
+          <figcaption class="p-4 text-sm text-slate-600">Leads Kanban with drag/drop and status badges.</figcaption>
+        </figure>
+        <figure class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+          <img src="../assets/demo/ai-assistant.gif" alt="AI Assistant" class="w-full h-64 object-cover bg-slate-100">
+          <figcaption class="p-4 text-sm text-slate-600">AI assistant summarizing notes and suggesting follow-ups.</figcaption>
+        </figure>
+        <figure class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+          <img src="../assets/demo/tasks-calendar.png" alt="Tasks Calendar" class="w-full h-64 object-cover bg-slate-100">
+          <figcaption class="p-4 text-sm text-slate-600">Tasks list + calendar view with filters.</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section id="features" class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <p class="text-sm font-semibold text-slate-900 mb-1">Leads & Deals</p>
+        <p class="text-sm text-slate-600">CRUD, filters, Kanban (leads), owner/last-contact fields, bulk status updates.</p>
+      </div>
+      <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <p class="text-sm font-semibold text-slate-900 mb-1">Tasks & Calendar</p>
+        <p class="text-sm text-slate-600">List/calendar toggle, due dates, status, linking to leads/contacts.</p>
+      </div>
+      <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <p class="text-sm font-semibold text-slate-900 mb-1">AI Assistant</p>
+        <p class="text-sm text-slate-600">Summaries and follow-ups via configurable LLM API (backend proxy).</p>
+      </div>
+      <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <p class="text-sm font-semibold text-slate-900 mb-1">Dashboard & Reports</p>
+        <p class="text-sm text-slate-600">Chart.js KPIs, pipeline charts, tasks/leads snapshots with filters.</p>
+      </div>
+      <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <p class="text-sm font-semibold text-slate-900 mb-1">Auth & Validation</p>
+        <p class="text-sm text-slate-600">Register/login/logout, basic token/session, shared validator, auth guard middleware.</p>
+      </div>
+      <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <p class="text-sm font-semibold text-slate-900 mb-1">Tech</p>
+        <p class="text-sm text-slate-600">PHP 8 + PDO/MySQL, Tailwind CSS, vanilla JS, Chart.js.</p>
+      </div>
+    </section>
+
+    <section id="run" class="rounded-2xl border border-slate-200 bg-white shadow-sm p-6 space-y-3">
+      <div class="flex items-center gap-3">
+        <span class="h-8 w-8 rounded-xl bg-blue-600 text-white grid place-items-center text-sm font-semibold">Run</span>
+        <h3 class="text-lg font-semibold text-slate-900">Run locally</h3>
+      </div>
+      <ol class="list-decimal list-inside text-sm text-slate-700 space-y-1">
+        <li>Clone: <code class="bg-slate-100 px-2 py-1 rounded">git clone https://github.com/ianlimescaros/CRM-App.git</code></li>
+        <li>Copy env: <code class="bg-slate-100 px-2 py-1 rounded">cp .env.example .env</code> and set DB/LLM keys.</li>
+        <li>Install PHP deps: <code class="bg-slate-100 px-2 py-1 rounded">composer install</code></li>
+        <li>Build CSS: <code class="bg-slate-100 px-2 py-1 rounded">npm install && npm run build:css</code></li>
+        <li>Import DB: <code class="bg-slate-100 px-2 py-1 rounded">mysql -u user -p dbname &lt; sql/schema.sql</code></li>
+        <li>Serve: <code class="bg-slate-100 px-2 py-1 rounded">php -S localhost:8000 -t public</code></li>
+      </ol>
+    </section>
+
+    <section class="rounded-2xl border border-blue-200 bg-blue-50 p-6">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <p class="text-sm font-semibold text-blue-900">Want to see it live?</p>
+          <p class="text-sm text-blue-900/80">Host on a PHP server (e.g., Hostinger) pointing to <code class="bg-blue-100 px-2 py-1 rounded">public/</code> and keep <code class="bg-blue-100 px-2 py-1 rounded">.env</code> out of web root.</p>
+        </div>
+        <a class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 text-white text-sm font-semibold shadow-sm hover:bg-blue-700" href="https://github.com/ianlimescaros/CRM-App">
+          View Repo
+        </a>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

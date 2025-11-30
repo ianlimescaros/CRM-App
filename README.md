@@ -31,6 +31,19 @@ Lightweight CRM for real estate/sales teams with leads, contacts, deals, tasks, 
 4) Import DB schema: `mysql -u user -p dbname < sql/schema.sql`
 5) Run locally: `php -S localhost:8000 -t public`
 
+## Demo / Showcase
+- Static landing: enable GitHub Pages on the `/docs` folder to serve `docs/index.html`.
+- Add screenshots/GIFs to `assets/demo/` (e.g., `dashboard.png`, `leads-kanban.png`, `ai-assistant.gif`) and reference them in `docs/index.html` and below.
+- README embeds (example):
+  - Dashboard: `assets/demo/dashboard.png`
+  - Leads Kanban: `assets/demo/leads-kanban.png`
+  - AI Assistant: `assets/demo/ai-assistant.gif`
+
+## GitHub Pages (static preview)
+- The app is dynamic (PHP), so GitHub Pages hosts only the static landing in `docs/`.
+- Steps: create `docs/index.html` (already included), push to `main`, then Settings → Pages → Source: `Deploy from a branch`, Branch: `main`, Folder: `/docs`.
+- Use the published URL to share screenshots, feature list, and repo link.
+
 ## Deployment
 - Web root should point to `public/`; protect `storage`, `.env`, `sql`
 - Ensure PHP extensions: pdo_mysql, curl
