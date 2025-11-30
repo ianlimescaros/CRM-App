@@ -31,6 +31,8 @@
     <div id="dealPagination" class="mt-2"></div>
 
     <div id="dealFormContainer" class="mt-4 hidden">
+        <div class="bg-gradient-to-r from-blue-500 via-purple-500 to-emerald-500 p-[1px] rounded-card shadow-2xl">
+            <div class="bg-white rounded-card p-4">
         <h2 class="text-xl font-semibold mb-2" id="dealFormTitle">New Deal</h2>
         <form id="dealForm" class="grid gap-3 sm:grid-cols-2">
             <div id="dealFormError" class="sm:col-span-2 text-sm text-red-600 hidden"></div>
@@ -74,5 +76,7 @@
                 <button class="px-4 py-2 border border-border rounded hover:bg-gray-100 transition" type="button" id="dealFormCancel">Cancel</button>
             </div>
         </form>
+            </div>
+        </div>
     </div>
 </section>

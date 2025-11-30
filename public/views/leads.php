@@ -101,6 +101,8 @@
     </div>
 
     <div id="leadFormContainer" class="mt-4 hidden">
+        <div class="bg-gradient-to-r from-blue-500 via-purple-500 to-emerald-500 p-[1px] rounded-card shadow-2xl">
+            <div class="bg-white rounded-card p-4">
         <h2 class="text-xl font-semibold mb-2" id="leadFormTitle">New Lead</h2>
         <form id="leadForm" class="grid gap-3 sm:grid-cols-2">
             <div id="leadFormError" class="sm:col-span-2 text-sm text-red-600 hidden"></div>
@@ -152,5 +154,7 @@
                 <button class="px-4 py-2 border border-border rounded hover:bg-gray-100 transition" type="button" id="leadFormCancel">Cancel</button>
             </div>
         </form>
+            </div>
+        </div>
     </div>
 </section>
