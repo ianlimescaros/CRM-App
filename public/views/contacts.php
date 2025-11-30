@@ -21,9 +21,9 @@
     </div>
     <div id="contactPagination" class="mt-2"></div>
 
-    <div id="contactFormContainer" class="mt-4 hidden">
-        <div class="bg-gradient-to-r from-blue-500 via-purple-500 to-emerald-500 p-[1px] rounded-card shadow-2xl">
-            <div class="bg-white rounded-card p-4">
+    <div id="contactFormContainer" class="fixed inset-0 bg-black/50 hidden z-40 flex items-start justify-center overflow-y-auto p-4">
+        <div class="bg-gradient-to-r from-blue-500 via-purple-500 to-emerald-500 p-[1px] rounded-card shadow-2xl w-full max-w-3xl mt-10">
+            <div class="bg-white rounded-card p-5">
         <h2 class="text-xl font-semibold mb-2" id="contactFormTitle">New Contact</h2>
         <form id="contactForm" class="grid gap-3 sm:grid-cols-2">
             <div id="contactFormError" class="sm:col-span-2 text-sm text-red-600 hidden"></div>

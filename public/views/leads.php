@@ -100,9 +100,9 @@
         </div>
     </div>
 
-    <div id="leadFormContainer" class="mt-4 hidden">
-        <div class="bg-gradient-to-r from-blue-500 via-purple-500 to-emerald-500 p-[1px] rounded-card shadow-2xl">
-            <div class="bg-white rounded-card p-4">
+    <div id="leadFormContainer" class="fixed inset-0 bg-black/50 hidden z-40 flex items-start justify-center overflow-y-auto p-4">
+        <div class="bg-gradient-to-r from-blue-500 via-purple-500 to-emerald-500 p-[1px] rounded-card shadow-2xl w-full max-w-3xl mt-10">
+            <div class="bg-white rounded-card p-5">
         <h2 class="text-xl font-semibold mb-2" id="leadFormTitle">New Lead</h2>
         <form id="leadForm" class="grid gap-3 sm:grid-cols-2">
             <div id="leadFormError" class="sm:col-span-2 text-sm text-red-600 hidden"></div>
