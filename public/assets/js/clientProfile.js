@@ -20,6 +20,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     const quickDealBtn = document.getElementById('clientQuickDeal');
     const uploadBtn = document.getElementById('clientFileAdd');
     const uploadInput = document.getElementById('clientFileInput');
+    const taskModal = document.getElementById('taskModal');
+    const dealModal = document.getElementById('dealModal');
+    const taskSubmit = document.getElementById('taskSubmit');
+    const dealSubmit = document.getElementById('dealSubmit');
+    const taskTitleInput = document.getElementById('taskTitle');
+    const taskDescInput = document.getElementById('taskDesc');
+    const taskDueInput = document.getElementById('taskDue');
+    const taskStatusInput = document.getElementById('taskStatus');
+    const dealTitleInput = document.getElementById('dealTitle');
+    const dealAmountInput = document.getElementById('dealAmount');
+    const dealStageInput = document.getElementById('dealStage');
+    const dealCloseInput = document.getElementById('dealClose');
 
     const setLoading = (el, text = 'Loading...') => {
         if (!el) return;
@@ -205,36 +217,89 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
+    const openModal = (modal) => modal && modal.classList.remove('hidden');
+    const closeModal = (modal) => modal && modal.classList.add('hidden');
+    const resetTaskForm = () => {
+        if (taskTitleInput) taskTitleInput.value = '';
+        if (taskDescInput) taskDescInput.value = '';
+        if (taskDueInput) taskDueInput.value = '';
+        if (taskStatusInput) taskStatusInput.value = 'pending';
+    };
+    const resetDealForm = () => {
+        if (dealTitleInput) dealTitleInput.value = '';
+        if (dealAmountInput) dealAmountInput.value = '';
+        if (dealStageInput) dealStageInput.value = 'prospecting';
+        if (dealCloseInput) dealCloseInput.value = '';
+    };
+
     if (quickTaskBtn) {
-        quickTaskBtn.addEventListener('click', async () => {
+        quickTaskBtn.addEventListener('click', () => {
             if (!currentId) return;
-            const title = prompt('Task title for this contact:');
-            if (!title || !title.trim()) return;
+            resetTaskForm();
+            openModal(taskModal);
+        });
+    }
+    if (quickDealBtn) {
+        quickDealBtn.addEventListener('click', () => {
+            if (!currentId) return;
+            resetDealForm();
+            openModal(dealModal);
+        });
+    }
+
+    document.querySelectorAll('[data-close-task]').forEach(btn => btn.addEventListener('click', () => closeModal(taskModal)));
+    document.querySelectorAll('[data-close-deal]').forEach(btn => btn.addEventListener('click', () => closeModal(dealModal)));
+
+    if (taskSubmit) {
+        taskSubmit.addEventListener('click', async () => {
+            if (!currentId) return;
+            const title = (taskTitleInput?.value || '').trim();
+            if (!title) {
+                ui?.showToast && ui.showToast('Task title is required', 'error');
+                return;
+            }
             try {
-                await apiClient.createTask({ title: title.trim(), contact_id: currentId, status: 'pending' });
-                if (window.ui?.showToast) ui.showToast('Task created', 'success');
+                await apiClient.createTask({
+                    title,
+                    description: taskDescInput?.value || '',
+                    due_date: taskDueInput?.value || null,
+                    status: taskStatusInput?.value || 'pending',
+                    contact_id: currentId,
+                });
+                ui?.showToast && ui.showToast('Task created', 'success');
+                closeModal(taskModal);
                 const tasksRes = await apiClient.listTasks({ contact_id: currentId });
                 renderTasks(tasksRes.tasks || tasksRes || []);
                 ContactActivityRefresh(currentId);
             } catch (err) {
-                if (window.ui?.showToast) ui.showToast(err?.message || 'Failed to create task', 'error');
+                ui?.showToast && ui.showToast(err?.message || 'Failed to create task', 'error');
             }
         });
     }
 
-    if (quickDealBtn) {
-        quickDealBtn.addEventListener('click', async () => {
+    if (dealSubmit) {
+        dealSubmit.addEventListener('click', async () => {
             if (!currentId) return;
-            const title = prompt('Deal title for this contact:');
-            if (!title || !title.trim()) return;
+            const title = (dealTitleInput?.value || '').trim();
+            if (!title) {
+                ui?.showToast && ui.showToast('Deal title is required', 'error');
+                return;
+            }
             try {
-                await apiClient.createDeal({ title: title.trim(), stage: 'prospecting', contact_id: currentId, amount: 0 });
-                if (window.ui?.showToast) ui.showToast('Deal created', 'success');
+                await apiClient.createDeal({
+                    title,
+                    amount: dealAmountInput?.value || 0,
+                    stage: dealStageInput?.value || 'prospecting',
+                    close_date: dealCloseInput?.value || null,
+                    contact_id: currentId,
+                });
+                ui?.showToast && ui.showToast('Deal created', 'success');
+                closeModal(dealModal);
                 const dealsRes = await apiClient.listDeals({ contact_id: currentId });
                 renderDeals(dealsRes.deals || dealsRes || []);
                 ContactActivityRefresh(currentId);
             } catch (err) {
-                if (window.ui?.showToast) ui.showToast(err?.message || 'Failed to create deal', 'error');
+                ui?.showToast && ui.showToast(err?.message || 'Failed to create deal', 'error');
             }
         });
     }
