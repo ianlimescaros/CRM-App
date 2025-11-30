@@ -147,6 +147,26 @@ class ContactController
         }
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            // Multipart upload (preferred for PDFs/Word)
+            if (!empty($_FILES['file']) && isset($_FILES['file']['error']) && $_FILES['file']['error'] === UPLOAD_ERR_OK) {
+                $uploadDir = __DIR__ . '/../../storage/uploads/contact_' . $id;
+                if (!is_dir($uploadDir)) {
+                    mkdir($uploadDir, 0775, true);
+                }
+                $original = $_FILES['file']['name'];
+                $safeName = preg_replace('/[^A-Za-z0-9._-]/', '_', $original);
+                $targetPath = $uploadDir . '/' . $safeName;
+                if (!move_uploaded_file($_FILES['file']['tmp_name'], $targetPath)) {
+                    Response::error('Failed to save file', 500);
+                }
+                $relUrl = '/storage/uploads/contact_' . $id . '/' . $safeName;
+                $sizeLabel = $this->formatSize(filesize($targetPath));
+                $created = ContactFile::create((int)$user['id'], $id, $original, $relUrl, $sizeLabel);
+                ContactActivity::create((int)$user['id'], $id, 'note', 'File added: ' . $original);
+                Response::success(['file' => $created], 201);
+            }
+
+            // JSON metadata-only
             $input = $this->getJsonInput();
             $name = trim($input['name'] ?? '');
             if ($name === '') {
@@ -244,5 +264,16 @@ class ContactController
         $raw = file_get_contents('php://input');
         $data = json_decode($raw, true);
         return is_array($data) ? $data : [];
+    }
+
+    private function formatSize(int $bytes): string
+    {
+        $units = ['B', 'KB', 'MB', 'GB'];
+        $i = 0;
+        while ($bytes >= 1024 && $i < count($units) - 1) {
+            $bytes /= 1024;
+            $i++;
+        }
+        return round($bytes, 1) . $units[$i];
     }
 }

@@ -66,7 +66,10 @@
             <div class="bg-white border border-border rounded-card shadow-card p-4">
                 <div class="flex items-center justify-between mb-3">
                     <h2 class="font-semibold">Files</h2>
-                    <button id="clientFileAdd" class="px-3 py-1 border border-border rounded text-sm hover:bg-gray-100">Upload</button>
+                    <div class="flex items-center gap-2">
+                        <input type="file" id="clientFileInput" class="hidden" />
+                        <button id="clientFileAdd" class="px-3 py-1 border border-border rounded text-sm hover:bg-gray-100">Upload</button>
+                    </div>
                 </div>
                 <div id="clientFiles" class="space-y-2 text-sm">
                     <div class="text-gray-500">No files attached.</div>

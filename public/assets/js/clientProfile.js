@@ -19,6 +19,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const quickTaskBtn = document.getElementById('clientQuickTask');
     const quickDealBtn = document.getElementById('clientQuickDeal');
     const uploadBtn = document.getElementById('clientFileAdd');
+    const uploadInput = document.getElementById('clientFileInput');
 
     const setLoading = (el, text = 'Loading...') => {
         if (!el) return;
@@ -232,21 +233,35 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    if (uploadBtn) {
-        uploadBtn.addEventListener('click', async () => {
+    if (uploadBtn && uploadInput) {
+        uploadBtn.addEventListener('click', () => {
             if (!currentId) return;
-            const name = prompt('File name (metadata only):');
-            if (!name || !name.trim()) return;
-            const url = prompt('Optional URL (if hosted):', '');
-            const sizeLabel = prompt('Optional size label (e.g., 1.2MB):', '');
+            uploadInput.value = '';
+            uploadInput.click();
+        });
+        uploadInput.addEventListener('change', async () => {
+            if (!currentId) return;
+            const file = uploadInput.files?.[0];
+            if (!file) return;
             try {
-                await apiClient.addContactFile(currentId, { name: name.trim(), url: url || null, size_label: sizeLabel || null });
-                if (window.ui?.showToast) ui.showToast('File added', 'success');
+                const fd = new FormData();
+                fd.append('file', file);
+                const token = apiClient.getToken();
+                const res = await fetch(`/api.php/contacts/${currentId}/files`, {
+                    method: 'POST',
+                    headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+                    body: fd,
+                });
+                if (!res.ok) {
+                    const data = await res.json().catch(() => ({}));
+                    throw new Error(data.message || 'Upload failed');
+                }
+                if (window.ui?.showToast) ui.showToast('File uploaded', 'success');
                 const filesRes = await apiClient.getContactFiles(currentId);
                 renderFiles(filesRes.files || []);
                 ContactActivityRefresh(currentId);
             } catch (err) {
-                if (window.ui?.showToast) ui.showToast(err?.message || 'Failed to add file', 'error');
+                if (window.ui?.showToast) ui.showToast(err?.message || 'Failed to upload', 'error');
             }
         });
     }
