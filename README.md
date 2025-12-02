@@ -1,8 +1,8 @@
-# CRM App (Web + Tauri)
+# CRM App (Web)
 
-PHP/MySQL CRM with Tailwind UI, AI helpers, profile management, password reset, and a Tauri desktop bundle.
+PHP/MySQL CRM with Tailwind UI, AI helpers, profile management, and password reset.
 
-## Quick start (web)
+## Quick start
 1) Copy `.env.example` to `.env` and set:
 ```
 APP_URL=http://127.0.0.1:8765
@@ -42,25 +42,9 @@ npm run build:css   # or npm run watch:css
 - Profile: two-column card (avatar/status + editable details)
 - Sidebar: icon nav; profile avatar + logout live in the top bar
 
-## Tauri desktop bundle
-Build output: `src-tauri/target/release/bundle/msi`
-```
-$env:PATH += ";$env:USERPROFILE\.cargo\bin"
-cd "C:\Users\stanl\OneDrive\Desktop\Web App\CRM-Tauri\crm-tauri"
-npm run tauri build
-```
-- Ensure `src-tauri/icons/icon1.ico` exists.
-- Identifier: `com.crmapp.desktop`; window points to `http://127.0.0.1:8765`.
-- Bundled PHP runtime: `src-tauri/bin/php/php.exe`.
-
-## Install on another PC (Tauri bundle)
-1) Run the MSI from `src-tauri/target/release/bundle/msi/` (e.g., `CRM App_0.1.0_x64_en-US.msi`).
-2) Place a real `.env` alongside `public/` and `src/` inside the installed `app` folder (same structure as here) with the keys above.
-3) Ensure the machine can reach your DB (or use a local DB). PHP is bundled; no extra install needed.
-
 ## Notes
 - Keep secrets out of version control; use `.env.example` as your template.
-- If you change icons, update `src-tauri/tauri.conf.json` `bundle.icon` to match.
+- Tailwind rebuild recommended after UI tweaks: `npm run build:css`.
 
 ## Recent changes (summary)
 - Added profile page (`?page=profile`) with avatar/status card and editable name/email/password; backend endpoints `/auth/me` and `/auth/profile`.
