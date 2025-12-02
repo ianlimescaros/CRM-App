@@ -20,6 +20,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const mobileOverlay = document.getElementById('mobileOverlay');
     const userEmailText = document.getElementById('userEmailText');
 
+    const handleLogout = async () => {
+        const ok = await ui.confirmModal('Do you want to log out?');
+        if (!ok) return;
+        try {
+            await apiClient.logout();
+        } catch (_) {
+            // ignore logout failures
+        } finally {
+            apiClient.setToken(null);
+            localStorage.removeItem('crm_user_email');
+            ui.showToast('Logged out', 'success');
+            window.location = '/index.php?page=login';
+        }
+    };
+
     function toggleSidebar(show) {
         if (!sidebar || !mobileOverlay) return;
         const shouldShow = typeof show === 'boolean' ? show : sidebar.classList.contains('hidden');
@@ -39,23 +54,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     if (logoutBtn) {
-        logoutBtn.addEventListener('click', async () => {
-            const ok = await ui.confirmModal('Do you want to log out?');
-            if (!ok) return;
-            try {
-                await apiClient.logout();
-            } catch (_) {
-                // ignore logout failures
-            } finally {
-                apiClient.setToken(null);
-                localStorage.removeItem('crm_user_email');
-                ui.showToast('Logged out', 'success');
-                window.location = '/index.php?page=login';
-            }
-        });
+        logoutBtn.addEventListener('click', handleLogout);
     }
     if (logoutBtnTop) {
-        logoutBtnTop.addEventListener('click', () => logoutBtn?.click());
+        logoutBtnTop.addEventListener('click', handleLogout);
     }
 
     // Display stored user email if available
