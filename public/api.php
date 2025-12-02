@@ -14,6 +14,9 @@ require_once __DIR__ . '/../src/config/config.php';
 require_once __DIR__ . '/../src/config/database.php';
 require_once __DIR__ . '/../src/services/Response.php';
 
+// Ensure consistent timezone (override PHP default if needed).
+date_default_timezone_set(env('APP_TIMEZONE', 'UTC'));
+
 // Basic PSR-4 style autoload for src classes.
 spl_autoload_register(function ($class) {
     $path = __DIR__ . '/../src/' . str_replace('\\', '/', $class) . '.php';

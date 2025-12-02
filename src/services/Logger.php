@@ -20,6 +20,8 @@ class Logger
 
     private static function write(string $level, string $message, array $context): void
     {
+        // Ensure timezone is consistent for logs.
+        date_default_timezone_set(env('APP_TIMEZONE', 'UTC'));
         $line = sprintf(
             "[%s] %s: %s %s\n",
             date('Y-m-d H:i:s'),

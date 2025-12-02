@@ -1,81 +1,63 @@
-# CRM App (PHP + Tailwind + Chart.js)
+# CRM App (Web + Tauri)
 
-Lightweight CRM for real estate/sales teams with leads, contacts, deals, tasks, AI assistant, and dashboards. Backend is PHP (no framework) with MySQL/PDO; frontend uses Tailwind CSS + vanilla JS; charts via Chart.js.
+PHP/MySQL CRM with Tailwind UI, AI helpers, profile management, password reset, and a Tauri desktop bundle.
 
-## Features
-- Auth (register/login/logout) with token/session
-- Leads/Contacts/Deals/Tasks CRUD; filters, bulk status (leads), table/Kanban (leads), list/calendar (tasks)
-- Gradient-styled modals/forms across leads/contacts/deals/tasks + client profile
-- AI Assistant: summarize notes, suggest follow-up (configurable LLM API)
-- Dashboard & Reports with inline/Chart.js charts
-- Client Profile page: detail, timeline (activities), notes, files upload/delete, related tasks/deals, quick add task/deal, contact search/filter
+## Quick start (web)
+1) Copy `.env.example` to `.env` and set:
+```
+APP_URL=http://127.0.0.1:8765
+APP_TIMEZONE=Asia/Dubai       # or your timezone
 
-## Stack
-- PHP 8.x, PDO/MySQL
-- Tailwind CSS (build via CLI), Chart.js (CDN)
-- Vanilla JS for UI, fetch API calls to `/api.php`
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_NAME=crm_app
+DB_USER=your_db_user
+DB_PASS=your_db_password
 
-## Setup
-1) Copy `.env` and set DB creds, APP_URL, LLM vars:
-   ```
-   DB_HOST=127.0.0.1
-   DB_PORT=3306
-   DB_NAME=crm_app
-   DB_USER=your_user
-   DB_PASS=your_pass
-   LLM_API_URL=https://api.openai.com/v1/chat/completions
-   LLM_API_KEY=sk-...
-   LLM_MODEL=gpt-4o
-   ```
-2) Install PHP deps (optional autoload): `composer install`
-3) Build Tailwind: `npm install` then `npm run build:css`
-4) Import DB schema: `mysql -u user -p dbname < sql/schema.sql`
-5) Run locally: `php -S localhost:8000 -t public`
+LLM_API_URL=https://api.openai.com/v1/chat/completions
+LLM_API_KEY=your_api_key
+LLM_MODEL=gpt-4o-mini
+```
+2) Import `sql/schema.sql` into MySQL (includes `password_resets`).
+3) Run the PHP server:
+```
+php -S 127.0.0.1:8765 -t public
+```
+4) (Optional) Rebuild Tailwind after UI changes:
+```
+npm install
+npm run build:css   # or npm run watch:css
+```
+5) Open `http://127.0.0.1:8765/index.php?page=login`.
 
-## Demo / Showcase
-- Static landing: enable GitHub Pages on the `/docs` folder to serve `docs/index.html`.
-- Add screenshots/GIFs to `assets/demo/` (e.g., `dashboard.png`, `leads-kanban.png`, `ai-assistant.gif`) and reference them in `docs/index.html` and below.
-- README embeds (example):
-  - Dashboard: `assets/demo/dashboard.png`
-  - Leads Kanban: `assets/demo/leads-kanban.png`
-  - AI Assistant: `assets/demo/ai-assistant.png`
+## Key features/endpoints
+- Auth: `/auth/register`, `/auth/login`, `/auth/logout`
+- Password reset: `/auth/forgot` (logs reset link in `storage/logs/app.log` for dev) and `/auth/reset` (token + new password)
+- Profile: `/auth/me`, `/auth/profile` (update name/email/password) and UI at `?page=profile`
+- CRM APIs: leads, contacts, deals, tasks (see `src/routes/api_routes.php`)
 
-## GitHub Pages (static preview)
-- The app is dynamic (PHP), so GitHub Pages hosts only the static landing in `docs/`.
-- Steps: create `docs/index.html` (already included), push to `main`, then Settings → Pages → Source: `Deploy from a branch`, Branch: `main`, Folder: `/docs`.
-- Use the published URL to share screenshots, feature list, and repo link.
+## UI notes
+- Login/reset: gradient background, pill inputs/buttons
+- Dashboard: card-based layout with charts, quick stats
+- Profile: two-column card (avatar/status + editable details)
+- Sidebar: icon nav; profile avatar + logout live in the top bar
 
-## Deployment
-- Web root should point to `public/`; protect `storage`, `.env`, `sql`
-- Ensure PHP extensions: pdo_mysql, curl
-- Set file perms for `storage/logs/app.log`
-- For Apache use `.htaccess` provided; Nginx use `try_files` to `api.php`/`index.php`
+## Tauri desktop bundle
+Build output: `src-tauri/target/release/bundle/msi`
+```
+$env:PATH += ";$env:USERPROFILE\.cargo\bin"
+cd "C:\Users\stanl\OneDrive\Desktop\Web App\CRM-Tauri\crm-tauri"
+npm run tauri build
+```
+- Ensure `src-tauri/icons/icon1.ico` exists.
+- Identifier: `com.crmapp.desktop`; window points to `http://127.0.0.1:8765`.
+- Bundled PHP runtime: `src-tauri/bin/php/php.exe`.
 
-## API (main endpoints)
-- Auth: `POST /auth/register`, `POST /auth/login`, `POST /auth/logout`
-- Leads: `GET/POST /leads`, `PUT/DELETE /leads/{id}`, `PATCH /leads/bulk`
-- Contacts: `GET/POST /contacts`, `PUT/DELETE /contacts/{id}`, search via `?search=`, detail `GET /contacts/{id}`
-- Contact profile extras: `GET /contacts/{id}/timeline`, `GET/POST /contacts/{id}/notes`, `GET/POST /contacts/{id}/files`, `POST /contacts/{id}/tasks`, `POST /contacts/{id}/deals`
-- Deals: `GET/POST /deals`, `PUT/DELETE /deals/{id}`
-- Tasks: `GET/POST /tasks`, `PUT/DELETE /tasks/{id}`
-- AI: `POST /ai/summarize`, `POST /ai/suggest-followup`
+## Install on another PC (Tauri bundle)
+1) Run the MSI from `src-tauri/target/release/bundle/msi/` (e.g., `CRM App_0.1.0_x64_en-US.msi`).
+2) Place a real `.env` alongside `public/` and `src/` inside the installed `app` folder (same structure as here) with the keys above.
+3) Ensure the machine can reach your DB (or use a local DB). PHP is bundled; no extra install needed.
 
-Pagination/sort: `page`, `per_page`, `sort`, `direction` supported on list endpoints.
-
-## Frontend notes
-- Pages in `public/views/`; JS in `public/assets/js/`
-- Styles from built `public/assets/css/tailwind.css`
-- Charts via Chart.js CDN; falls back to inline renderers if unavailable
-
-## Development scripts
-- Build CSS: `npm run build:css`
-- Watch CSS: `npm run watch:css`
-
-## Security
-- SSL verification enforced for AI calls; set proper CA bundle on the server
-- Keep `.env` out of VCS and web root
-- Use HTTPS in production
-
-## Known gaps
-- Charts use live endpoints but minimal filtering
-- Drag/drop Kanban updates lead status; other entities don’t have bulk actions yet
+## Notes
+- Keep secrets out of version control; use `.env.example` as your template.
+- If you change icons, update `src-tauri/tauri.conf.json` `bundle.icon` to match.

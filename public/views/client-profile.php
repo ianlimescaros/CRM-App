@@ -88,6 +88,28 @@
     </div>
 </section>
 
+<!-- Quick Note Modal -->
+<div id="noteModal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-50 p-4">
+    <div class="bg-gradient-to-r from-blue-500 via-purple-500 to-emerald-500 p-[1px] rounded-card shadow-2xl w-full max-w-lg">
+        <div class="bg-white rounded-card p-5">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="text-lg font-semibold">Add Note for this contact</h3>
+                <button data-close-note class="text-gray-500 hover:text-gray-700">✕</button>
+            </div>
+            <div class="space-y-3">
+                <div>
+                    <label class="text-sm text-gray-700">Note</label>
+                    <textarea id="noteContent" class="w-full border border-border rounded px-3 py-2" rows="4" placeholder="Type your note here"></textarea>
+                </div>
+            </div>
+            <div class="mt-4 flex justify-end gap-2">
+                <button data-close-note class="px-3 py-2 border border-border rounded text-sm">Cancel</button>
+                <button id="noteSubmit" class="px-4 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">Save note</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Quick Task Modal -->
 <div id="taskModal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-50 p-4">
     <div class="bg-gradient-to-r from-blue-500 via-purple-500 to-emerald-500 p-[1px] rounded-card shadow-2xl w-full max-w-lg">

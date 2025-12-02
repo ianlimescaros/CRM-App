@@ -64,6 +64,12 @@ document.addEventListener('DOMContentLoaded', () => {
         userEmailText.textContent = storedEmail;
         userEmailText.classList.remove('hidden');
     }
+    const avatarInitials = document.getElementById('userAvatarInitials');
+    if (storedEmail && avatarInitials) {
+        const parts = storedEmail.split('@')[0];
+        const initials = parts.slice(0, 2).toUpperCase();
+        avatarInitials.textContent = initials;
+    }
 
     switch (page) {
         case 'login':
@@ -93,6 +99,9 @@ document.addEventListener('DOMContentLoaded', () => {
         case 'client-profile':
             initClientProfile();
             break;
+        case 'profile':
+            initProfile();
+            break;
         default:
             break;
     }
@@ -102,12 +111,51 @@ function initLogin() {
     const loginForm = document.getElementById('loginForm');
     const registerForm = document.getElementById('registerForm');
     const showRegister = document.getElementById('showRegister');
+    const showForgot = document.getElementById('showForgot');
+    const forgotForm = document.getElementById('forgotForm');
+    const resetForm = document.getElementById('resetForm');
+    const showResetForm = document.getElementById('showResetForm');
+    const backToLoginFromForgot = document.getElementById('backToLoginFromForgot');
+    const backToLoginFromRegister = document.getElementById('backToLoginFromRegister');
+    const backToLoginFromReset = document.getElementById('backToLoginFromReset');
+    const forgotError = document.getElementById('forgotError');
+    const forgotSuccess = document.getElementById('forgotSuccess');
+    const resetError = document.getElementById('resetError');
+    const resetSuccess = document.getElementById('resetSuccess');
 
     if (showRegister) {
         showRegister.addEventListener('click', () => {
             ui.toggle(registerForm, true);
+            ui.toggle(loginForm, false);
+            ui.toggle(forgotForm, false);
+            ui.toggle(resetForm, false);
         });
     }
+
+    if (showForgot) {
+        showForgot.addEventListener('click', () => {
+            ui.toggle(loginForm, false);
+            ui.toggle(registerForm, false);
+            ui.toggle(resetForm, false);
+            ui.toggle(forgotForm, true);
+        });
+    }
+
+    if (showResetForm) {
+        showResetForm.addEventListener('click', () => {
+            ui.toggle(forgotForm, false);
+            ui.toggle(resetForm, true);
+        });
+    }
+
+    [backToLoginFromForgot, backToLoginFromRegister, backToLoginFromReset].forEach(btn => {
+        btn?.addEventListener('click', () => {
+            ui.toggle(loginForm, true);
+            ui.toggle(registerForm, false);
+            ui.toggle(forgotForm, false);
+            ui.toggle(resetForm, false);
+        });
+    });
 
     if (loginForm) {
         loginForm.addEventListener('submit', async (e) => {
@@ -133,6 +181,59 @@ function initLogin() {
                 }
             }
         });
+    }
+
+    if (forgotForm) {
+        const emailInput = forgotForm.querySelector('input[name="email"]');
+        forgotForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            forgotError?.classList.add('hidden');
+            forgotSuccess?.classList.add('hidden');
+            try {
+                await apiClient.forgotPassword(emailInput?.value || '');
+                ui.showToast('Reset link sent if email exists', 'success');
+                if (forgotSuccess) {
+                    forgotSuccess.textContent = 'If that email exists, a reset link has been sent.';
+                    forgotSuccess.classList.remove('hidden');
+                }
+            } catch (err) {
+                forgotError && (forgotError.textContent = err.message || 'Failed to send reset link');
+                forgotError && forgotError.classList.remove('hidden');
+            }
+        });
+    }
+
+    if (resetForm) {
+        const tokenInput = resetForm.querySelector('input[name="token"]');
+        const passInput = resetForm.querySelector('input[name="password"]');
+        resetForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            resetError?.classList.add('hidden');
+            resetSuccess?.classList.add('hidden');
+            try {
+                await apiClient.resetPassword(tokenInput?.value || '', passInput?.value || '');
+                ui.showToast('Password reset', 'success');
+                if (resetSuccess) {
+                    resetSuccess.textContent = 'Password has been reset. You can log in now.';
+                    resetSuccess.classList.remove('hidden');
+                }
+                ui.toggle(resetForm, false);
+                ui.toggle(loginForm, true);
+            } catch (err) {
+                resetError && (resetError.textContent = err.message || 'Failed to reset password');
+                resetError && resetError.classList.remove('hidden');
+            }
+        });
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const preset = urlParams.get('reset_token');
+        if (preset && tokenInput) {
+            tokenInput.value = preset;
+            ui.toggle(loginForm, false);
+            ui.toggle(registerForm, false);
+            ui.toggle(forgotForm, false);
+            ui.toggle(resetForm, true);
+        }
     }
 
     if (registerForm) {
@@ -161,6 +262,66 @@ function initLogin() {
     }
 }
 
+async function initProfile() {
+    const form = document.getElementById('profileForm');
+    const errorBox = document.getElementById('profileError');
+    const savedBadge = document.getElementById('profileSaved');
+
+    async function loadProfile() {
+        try {
+            const res = await apiClient.me();
+            if (form && res.user) {
+                form.elements.name.value = res.user.name || '';
+                form.elements.email.value = res.user.email || '';
+                const nameDisplay = document.getElementById('profileNameDisplay');
+                const emailDisplay = document.getElementById('profileEmailDisplay');
+                const codeDisplay = document.getElementById('profileCodeDisplay');
+                if (nameDisplay) nameDisplay.textContent = res.user.name || 'User';
+                if (emailDisplay) emailDisplay.textContent = res.user.email || '--';
+                if (codeDisplay) codeDisplay.textContent = '#U' + (res.user.id || '').toString().padStart(4, '0');
+                const trustBar = document.getElementById('profileTrustBar');
+                if (trustBar) trustBar.style.width = '85%';
+            }
+        } catch (err) {
+            errorBox && (errorBox.textContent = err.message || 'Failed to load profile');
+            errorBox && errorBox.classList.remove('hidden');
+        }
+    }
+
+    if (form) {
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            errorBox && errorBox.classList.add('hidden');
+            savedBadge && savedBadge.classList.add('hidden');
+            const payload = {
+                name: form.elements.name.value,
+                email: form.elements.email.value,
+            };
+            const passVal = form.elements.password.value;
+            if (passVal) payload.password = passVal;
+            try {
+                const res = await apiClient.updateProfile(payload);
+                ui.showToast('Profile updated', 'success');
+                if (savedBadge) savedBadge.classList.remove('hidden');
+                form.elements.password.value = '';
+                if (res.user?.email) {
+                    localStorage.setItem('crm_user_email', res.user.email);
+                    const userEmailText = document.getElementById('userEmailText');
+                    if (userEmailText) {
+                        userEmailText.textContent = res.user.email;
+                        userEmailText.classList.remove('hidden');
+                    }
+                }
+            } catch (err) {
+                errorBox && (errorBox.textContent = err.message || 'Failed to update profile');
+                errorBox && errorBox.classList.remove('hidden');
+            }
+        });
+    }
+
+    loadProfile();
+}
+
 async function initDashboard() {
     try {
         const [leadRes, dealRes, taskRes] = await Promise.all([
@@ -183,7 +344,7 @@ async function initDashboard() {
                 <div class="flex justify-between items-center border border-border rounded px-3 py-2 bg-white">
                     <div>
                         <div class="font-semibold">${escapeHtml(l.name)}</div>
-                        <div class="text-xs text-gray-500">${l.source || '—'}</div>
+                        <div class="text-xs text-gray-500">${escapeHtml(l.source || '-')}</div>
                     </div>
                     <span class="inline-flex items-center px-2 py-1 rounded text-xs bg-blue-50 text-blue-700">${l.status}</span>
                 </div>
@@ -422,7 +583,7 @@ function initLeads() {
             columns[status].innerHTML = list.map(l => `
                 <div class="border border-border rounded-card p-3 bg-white shadow-sm" draggable="true" data-id="${l.id}">
                     <div class="font-semibold text-sm">${escapeHtml(l.name)}</div>
-                    <div class="text-xs text-gray-500">${l.source || '—'}</div>
+                    <div class="text-xs text-gray-500">${escapeHtml(l.source || '-')}</div>
                     <div class="mt-2 inline-flex px-2 py-1 rounded text-[11px] ${statusColors[status] || 'bg-gray-100 text-gray-700'}">${status}</div>
                 </div>
             `).join('') || '<div class="text-xs text-gray-500">No leads</div>';
@@ -452,10 +613,10 @@ function initLeads() {
                 <td class="px-3 py-2">
                     <span class="inline-flex items-center px-2 py-1 rounded text-xs bg-blue-50 text-blue-700">${lead.status}</span>
                 </td>
-                <td class="px-3 py-2">${lead.source || ''}</td>
-                <td class="px-3 py-2 text-xs text-gray-700">${lead.owner_id || '—'}</td>
-                <td class="px-3 py-2 text-xs text-gray-700">${lead.last_contact_at || '—'}</td>
-                <td class="px-3 py-2">${lead.budget || ''}</td>
+                <td class="px-3 py-2">${escapeHtml(lead.source || '')}</td>
+                <td class="px-3 py-2 text-xs text-gray-700">${lead.owner_id !== null && lead.owner_id !== undefined && lead.owner_id !== '' ? escapeHtml(String(lead.owner_id)) : '--'}</td>
+                <td class="px-3 py-2 text-xs text-gray-700">${lead.last_contact_at ? escapeHtml(String(lead.last_contact_at)) : '--'}</td>
+                <td class="px-3 py-2">${lead.budget !== null && lead.budget !== undefined ? escapeHtml(String(lead.budget)) : ''}</td>
                 <td class="px-3 py-2 space-x-2">
                     <button class="text-blue-600 lead-edit">Edit</button>
                     <button class="text-red-600 lead-delete">Delete</button>
@@ -737,8 +898,8 @@ function initContacts() {
         return `
             <tr data-id="${contact.id}" class="border-b last:border-b-0 even:bg-gray-50 hover:bg-gray-100">
                 <td class="px-3 py-2">${escapeHtml(contact.full_name)}</td>
-                <td class="px-3 py-2">${contact.email || ''}</td>
-                <td class="px-3 py-2">${contact.phone || ''}</td>
+                <td class="px-3 py-2">${contact.email ? escapeHtml(contact.email) : ''}</td>
+                <td class="px-3 py-2">${contact.phone ? escapeHtml(contact.phone) : ''}</td>
                 <td class="px-3 py-2 space-x-2">
                     <button class="text-blue-600 contact-edit">Edit</button>
                     <button class="text-red-600 contact-delete">Delete</button>
@@ -913,8 +1074,8 @@ function initDeals() {
                 <td class="px-3 py-2">
                     <span class="inline-flex px-2 py-1 rounded text-xs ${stageColors[deal.stage] || 'bg-gray-100 text-gray-700'}">${deal.stage}</span>
                 </td>
-                <td class="px-3 py-2">${deal.amount || ''}</td>
-                <td class="px-3 py-2">${deal.close_date || ''}</td>
+                <td class="px-3 py-2">${deal.amount !== null && deal.amount !== undefined ? escapeHtml(String(deal.amount)) : ''}</td>
+                <td class="px-3 py-2">${deal.close_date ? escapeHtml(String(deal.close_date)) : ''}</td>
                 <td class="px-3 py-2 space-x-2">
                     <button class="text-blue-600 deal-edit">Edit</button>
                     <button class="text-red-600 deal-delete">Delete</button>
@@ -1133,7 +1294,7 @@ function initTasks() {
         return `
             <tr data-id="${task.id}" data-lead-id="${task.lead_id || ''}" data-contact-id="${task.contact_id || ''}" class="border-b last:border-b-0 even:bg-gray-50 hover:bg-gray-100">
                 <td class="px-3 py-2">${escapeHtml(task.title)}</td>
-                <td class="px-3 py-2">${task.due_date || ''}</td>
+                <td class="px-3 py-2">${task.due_date ? escapeHtml(String(task.due_date)) : ''}</td>
                 <td class="px-3 py-2">
                     <span class="inline-flex px-2 py-1 rounded text-xs ${statusColors[task.status] || 'bg-gray-100 text-gray-700'}">${task.status}</span>
                 </td>

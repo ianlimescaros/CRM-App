@@ -4,11 +4,18 @@ require_once __DIR__ . '/../config/database.php';
 
 class ContactFile
 {
+    private static function stripSensitive(array $row): array
+    {
+        unset($row['disk_path']);
+        return $row;
+    }
+
     public static function listForContact(int $userId, int $contactId): array
     {
         $stmt = db()->prepare('SELECT * FROM contact_files WHERE user_id = :user_id AND contact_id = :contact_id ORDER BY created_at DESC');
         $stmt->execute([':user_id' => $userId, ':contact_id' => $contactId]);
-        return $stmt->fetchAll();
+        $rows = $stmt->fetchAll();
+        return array_map([self::class, 'stripSensitive'], $rows);
     }
 
     public static function create(int $userId, int $contactId, string $name, ?string $url = null, ?string $sizeLabel = null, ?string $diskPath = null): array
@@ -29,7 +36,6 @@ class ContactFile
             'name' => $name,
             'url' => $url,
             'size_label' => $sizeLabel,
-            'disk_path' => $diskPath,
             'created_at' => date('Y-m-d H:i:s'),
         ];
     }

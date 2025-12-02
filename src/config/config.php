@@ -52,13 +52,13 @@ return [
     'db' => [
         'host' => env('DB_HOST', '127.0.0.1'),
         'port' => env('DB_PORT', 3306),
-        'name' => env('DB_NAME', 'crm_app'),
-        'user' => env('DB_USER', 'root'),
-        'pass' => env('DB_PASS', ''),
+        'name' => env('DB_NAME', env('DB_DATABASE', 'crm_app')),
+        'user' => env('DB_USER', env('DB_USERNAME', 'root')),
+        'pass' => env('DB_PASS', env('DB_PASSWORD', '')),
         'charset' => 'utf8mb4',
     ],
     'llm' => [
-        'url' => env('LLM_API_URL', ''),
+        'url' => env('LLM_API_URL', env('LLM_API_BASE', '')),
         'key' => env('LLM_API_KEY', ''),
         'model' => env('LLM_MODEL', 'gpt-4'),
     ],

@@ -40,6 +40,10 @@ const apiClient = {
     login: (email, password) => request('/auth/login', { method: 'POST', body: { email, password } }),
     register: (payload) => request('/auth/register', { method: 'POST', body: payload }),
     logout: () => request('/auth/logout', { method: 'POST' }),
+    forgotPassword: (email) => request('/auth/forgot', { method: 'POST', body: { email } }),
+    resetPassword: (token, password) => request('/auth/reset', { method: 'POST', body: { token, password } }),
+    me: () => request('/auth/me'),
+    updateProfile: (payload) => request('/auth/profile', { method: 'PUT', body: payload }),
 
     listLeads: (filters = {}) => {
         const params = new URLSearchParams(filters);

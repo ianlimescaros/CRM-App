@@ -147,21 +147,59 @@ class ContactController
         }
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $allowedExt = ['pdf', 'doc', 'docx', 'png', 'jpg', 'jpeg', 'txt'];
+            $allowedMime = [
+                'application/pdf',
+                'application/msword',
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                'image/png',
+                'image/jpeg',
+                'text/plain',
+            ];
+            $maxSize = 5 * 1024 * 1024; // 5 MB
+
             // Multipart upload (preferred for PDFs/Word)
             if (!empty($_FILES['file']) && isset($_FILES['file']['error']) && $_FILES['file']['error'] === UPLOAD_ERR_OK) {
+                $file = $_FILES['file'];
+                $original = trim($file['name'] ?? 'upload');
+                $ext = strtolower((string)pathinfo($original, PATHINFO_EXTENSION));
+                if ($file['size'] > $maxSize) {
+                    Response::error('Validation failed', 422, ['file' => 'File is too large (max 5MB).']);
+                }
+                if ($ext && !in_array($ext, $allowedExt, true)) {
+                    Response::error('Validation failed', 422, ['file' => 'File type not allowed.']);
+                }
+                $tmpPath = $file['tmp_name'];
+                $mime = null;
+                if ($tmpPath && is_uploaded_file($tmpPath)) {
+                    $finfo = finfo_open(FILEINFO_MIME_TYPE);
+                    if ($finfo) {
+                        $mime = finfo_file($finfo, $tmpPath);
+                        finfo_close($finfo);
+                    }
+                }
+                if ($mime && !in_array($mime, $allowedMime, true)) {
+                    Response::error('Validation failed', 422, ['file' => 'File type not allowed.']);
+                }
+
                 $uploadDir = __DIR__ . '/../../storage/uploads/contact_' . $id;
                 if (!is_dir($uploadDir)) {
                     mkdir($uploadDir, 0775, true);
                 }
-                $original = $_FILES['file']['name'];
-                $safeName = preg_replace('/[^A-Za-z0-9._-]/', '_', $original);
-                $targetPath = $uploadDir . '/' . $safeName;
-                if (!move_uploaded_file($_FILES['file']['tmp_name'], $targetPath)) {
+                try {
+                    $randomName = bin2hex(random_bytes(16));
+                } catch (Exception $e) {
+                    $randomName = uniqid('file_', true);
+                }
+                $finalName = $ext ? $randomName . '.' . $ext : $randomName;
+                $targetPath = $uploadDir . '/' . $finalName;
+                if (!move_uploaded_file($tmpPath, $targetPath)) {
                     Response::error('Failed to save file', 500);
                 }
-                $relUrl = '/storage/uploads/contact_' . $id . '/' . $safeName;
-                $sizeLabel = $this->formatSize(filesize($targetPath));
+                $relUrl = '/storage/uploads/contact_' . $id . '/' . $finalName;
+                $sizeLabel = $this->formatSize((int)filesize($targetPath));
                 $created = ContactFile::create((int)$user['id'], $id, $original, $relUrl, $sizeLabel, $targetPath);
+                unset($created['disk_path']);
                 ContactActivity::create((int)$user['id'], $id, 'note', 'File added: ' . $original);
                 Response::success(['file' => $created], 201);
             }
@@ -172,13 +210,19 @@ class ContactController
             if ($name === '') {
                 Response::error('Validation failed', 422, ['name' => 'File name is required.']);
             }
+            $url = isset($input['url']) ? trim((string)$input['url']) : null;
+            if ($url && !preg_match('#^https?://#i', $url)) {
+                $url = null;
+            }
+            $sizeLabel = isset($input['size_label']) ? trim((string)$input['size_label']) : null;
             $created = ContactFile::create(
                 (int)$user['id'],
                 $id,
                 $name,
-                $input['url'] ?? null,
-                $input['size_label'] ?? null
+                $url,
+                $sizeLabel
             );
+            unset($created['disk_path']);
             ContactActivity::create((int)$user['id'], $id, 'note', 'File added: ' . $name);
             Response::success(['file' => $created], 201);
         }

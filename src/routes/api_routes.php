@@ -11,6 +11,10 @@ return [
     ['method' => 'POST', 'path' => '/auth/register', 'handler' => [AuthController::class, 'register']],
     ['method' => 'POST', 'path' => '/auth/login', 'handler' => [AuthController::class, 'login']],
     ['method' => 'POST', 'path' => '/auth/logout', 'handler' => [AuthController::class, 'logout']],
+    ['method' => 'POST', 'path' => '/auth/forgot', 'handler' => [AuthController::class, 'forgot']],
+    ['method' => 'POST', 'path' => '/auth/reset', 'handler' => [AuthController::class, 'reset']],
+    ['method' => 'GET', 'path' => '/auth/me', 'handler' => [AuthController::class, 'me']],
+    ['method' => 'PUT', 'path' => '/auth/profile', 'handler' => [AuthController::class, 'updateProfile']],
 
     ['method' => 'GET', 'path' => '/leads', 'handler' => [LeadController::class, 'index']],
     ['method' => 'POST', 'path' => '/leads', 'handler' => [LeadController::class, 'store']],

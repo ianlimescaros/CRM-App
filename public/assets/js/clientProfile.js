@@ -3,6 +3,34 @@ document.addEventListener('DOMContentLoaded', async () => {
     const pageEl = document.querySelector('[data-page="client-profile"]');
     if (!pageEl) return;
 
+    function escapeHtml(str) {
+        if (typeof str !== 'string') return str;
+        return str
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    function safeText(value) {
+        if (value === null || value === undefined) return '';
+        return escapeHtml(String(value));
+    }
+
+    function sanitizeUrl(url) {
+        if (!url) return null;
+        try {
+            const parsed = new URL(url, window.location.origin);
+            if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+                return parsed.href;
+            }
+            return null;
+        } catch (e) {
+            return null;
+        }
+    }
+
     const params = new URLSearchParams(window.location.search);
     let contactId = params.get('contact_id');
 
@@ -32,10 +60,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     const dealAmountInput = document.getElementById('dealAmount');
     const dealStageInput = document.getElementById('dealStage');
     const dealCloseInput = document.getElementById('dealClose');
+    const noteModal = document.getElementById('noteModal');
+    const noteContentInput = document.getElementById('noteContent');
+    const noteSubmit = document.getElementById('noteSubmit');
 
     const setLoading = (el, text = 'Loading...') => {
         if (!el) return;
-        el.innerHTML = `<div class="text-sm text-gray-500">${text}</div>`;
+        el.innerHTML = `<div class="text-sm text-gray-500">${safeText(text)}</div>`;
     };
 
     const renderTimeline = (items = []) => {
@@ -46,10 +77,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         timelineEl.innerHTML = items.map(item => `
             <div class="flex gap-3">
-                <div class="text-xs text-gray-500 w-24">${item.at}</div>
+                <div class="text-xs text-gray-500 w-24">${safeText(item.at)}</div>
                 <div class="flex-1 bg-gray-50 border border-border rounded-card px-3 py-2 text-sm">
-                    <div class="font-semibold capitalize">${item.type}</div>
-                    <div class="text-gray-700">${item.detail}</div>
+                    <div class="font-semibold capitalize">${safeText(item.type)}</div>
+                    <div class="text-gray-700">${safeText(item.detail)}</div>
                 </div>
             </div>
         `).join('');
@@ -63,8 +94,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         notesEl.innerHTML = items.map(n => `
             <div class="bg-gray-50 border border-border rounded-card px-3 py-2 text-sm">
-                <div class="text-gray-800">${n.content}</div>
-                <div class="text-xs text-gray-500 mt-1">${n.created_at}</div>
+                <div class="text-gray-800">${safeText(n.content)}</div>
+                <div class="text-xs text-gray-500 mt-1">${safeText(n.created_at)}</div>
             </div>
         `).join('');
     };
@@ -78,11 +109,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         filesEl.innerHTML = items.map(f => `
             <div class="flex justify-between items-center bg-gray-50 border border-border rounded-card px-3 py-2 text-sm">
                 <div>
-                    <div class="font-semibold">${f.name}</div>
-                    <div class="text-xs text-gray-500">${f.size_label || ''} ${f.created_at || f.updated_at || ''}</div>
+                    <div class="font-semibold">${safeText(f.name)}</div>
+                    <div class="text-xs text-gray-500">${safeText(f.size_label || '')} ${safeText(f.created_at || f.updated_at || '')}</div>
                 </div>
                 <div class="flex items-center gap-2">
-                    ${f.url ? `<a href="${f.url}" target="_blank" class="text-blue-600 text-xs underline">View</a>` : ''}
+                    ${sanitizeUrl(f.url) ? `<a href="${sanitizeUrl(f.url)}" target="_blank" rel="noopener noreferrer" class="text-blue-600 text-xs underline">View</a>` : ''}
                     <button data-file-id="${f.id}" class="text-xs text-red-600 hover:text-red-800">Delete</button>
                 </div>
             </div>
@@ -91,12 +122,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const renderSummary = (contact, stats = {}, timeline = []) => {
         if (!summaryEl) return;
-        const lastContact = timeline[0]?.at || contact?.updated_at || '—';
+        const lastContact = timeline[0]?.at || contact?.updated_at || '-';
         summaryEl.innerHTML = `
-            <li>Last contact: ${lastContact}</li>
-            <li>Open deals: ${stats.deals ?? 0}</li>
-            <li>Open tasks: ${stats.tasks ?? 0}</li>
-            <li>Source: ${contact?.company || '—'}</li>
+            <li>Last contact: ${safeText(lastContact)}</li>
+            <li>Open deals: ${safeText(stats.deals ?? 0)}</li>
+            <li>Open tasks: ${safeText(stats.tasks ?? 0)}</li>
+            <li>Source: ${safeText(contact?.company || '-')}</li>
         `;
     };
 
@@ -123,10 +154,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         tasksEl.innerHTML = items.map(t => `
             <div class="flex justify-between items-center border border-border rounded-card px-3 py-2 bg-gray-50">
                 <div>
-                    <div class="font-semibold">${t.title}</div>
-                    <div class="text-xs text-gray-500">${t.due_date || 'No due date'} • ${t.status}</div>
+                    <div class="font-semibold">${safeText(t.title)}</div>
+                    <div class="text-xs text-gray-500">${safeText(t.due_date || 'No due date')} • ${safeText(t.status)}</div>
                 </div>
-                <span class="text-xs text-gray-500">#${t.id}</span>
+                <span class="text-xs text-gray-500">#${safeText(t.id)}</span>
             </div>
         `).join('');
     };
@@ -140,10 +171,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         dealsEl.innerHTML = items.map(d => `
             <div class="flex justify-between items-center border border-border rounded-card px-3 py-2 bg-gray-50">
                 <div>
-                    <div class="font-semibold">${d.title}</div>
-                    <div class="text-xs text-gray-500">${d.stage} • $${Number(d.amount || 0).toLocaleString()}</div>
+                    <div class="font-semibold">${safeText(d.title)}</div>
+                    <div class="text-xs text-gray-500">${safeText(d.stage)} • $${Number(d.amount || 0).toLocaleString()}</div>
                 </div>
-                <span class="text-xs text-gray-500">#${d.id}</span>
+                <span class="text-xs text-gray-500">#${safeText(d.id)}</span>
             </div>
         `).join('');
     };
@@ -200,20 +231,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     let currentId = await loadContact();
 
     if (addNoteBtn) {
-        addNoteBtn.addEventListener('click', async () => {
+        addNoteBtn.addEventListener('click', () => {
             if (!currentId) return;
-            const note = prompt('Add a note for this contact:');
-            if (!note || !note.trim()) return;
-            try {
-                await apiClient.addContactNote(currentId, note.trim());
-                if (window.ui?.showToast) ui.showToast('Note added', 'success');
-                const notesRes = await apiClient.getContactNotes(currentId);
-                const timelineRes = await apiClient.getContactTimeline(currentId);
-                renderNotes(notesRes.notes || []);
-                renderSummary({ id: currentId }, {}, timelineRes.timeline || []);
-            } catch (err) {
-                if (window.ui?.showToast) ui.showToast(err?.message || 'Failed to add note', 'error');
-            }
+            if (noteContentInput) noteContentInput.value = '';
+            openModal(noteModal);
         });
     }
 
@@ -249,6 +270,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     document.querySelectorAll('[data-close-task]').forEach(btn => btn.addEventListener('click', () => closeModal(taskModal)));
     document.querySelectorAll('[data-close-deal]').forEach(btn => btn.addEventListener('click', () => closeModal(dealModal)));
+    document.querySelectorAll('[data-close-note]').forEach(btn => btn.addEventListener('click', () => closeModal(noteModal)));
 
     if (taskSubmit) {
         taskSubmit.addEventListener('click', async () => {
@@ -374,5 +396,30 @@ document.addEventListener('DOMContentLoaded', async () => {
         } catch (e) {
             // ignore
         }
+    }
+
+    if (noteSubmit) {
+        noteSubmit.addEventListener('click', async () => {
+            if (!currentId) return;
+            const note = (noteContentInput?.value || '').trim();
+            if (!note) {
+                ui?.showToast && ui.showToast('Note content is required', 'error');
+                return;
+            }
+            try {
+                await apiClient.addContactNote(currentId, note);
+                ui?.showToast && ui.showToast('Note added', 'success');
+                closeModal(noteModal);
+                const [notesRes, timelineRes] = await Promise.all([
+                    apiClient.getContactNotes(currentId),
+                    apiClient.getContactTimeline(currentId),
+                ]);
+                renderNotes(notesRes.notes || []);
+                renderSummary({ id: currentId }, {}, timelineRes.timeline || []);
+                ContactActivityRefresh(currentId);
+            } catch (err) {
+                ui?.showToast && ui.showToast(err?.message || 'Failed to add note', 'error');
+            }
+        });
     }
 });

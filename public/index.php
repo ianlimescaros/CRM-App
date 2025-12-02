@@ -1,11 +1,21 @@
 <?php
 
-$page = $_GET['page'] ?? 'login';
-$viewPath = __DIR__ . '/views/' . $page . '.php';
+$allowedPages = [
+    'login',
+    'dashboard',
+    'leads',
+    'contacts',
+    'client-profile',
+    'profile',
+    'deals',
+    'tasks',
+    'reports',
+    'ai-assistant',
+];
 
-if (!file_exists($viewPath)) {
-    $viewPath = __DIR__ . '/views/login.php';
-}
+$page = $_GET['page'] ?? 'login';
+$page = in_array($page, $allowedPages, true) ? $page : 'login';
+$viewPath = __DIR__ . '/views/' . $page . '.php';
 
 ob_start();
 require $viewPath;

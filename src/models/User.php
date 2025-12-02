@@ -65,4 +65,16 @@ class User
         $stmt = db()->prepare('DELETE FROM auth_tokens WHERE user_id = :user_id');
         $stmt->execute([':user_id' => $userId]);
     }
+
+    public static function updatePassword(int $id, string $passwordHash): void
+    {
+        $stmt = db()->prepare('UPDATE users SET password_hash = :password_hash WHERE id = :id');
+        $stmt->execute([':password_hash' => $passwordHash, ':id' => $id]);
+    }
+
+    public static function updateProfile(int $id, string $name, string $email): void
+    {
+        $stmt = db()->prepare('UPDATE users SET name = :name, email = :email WHERE id = :id');
+        $stmt->execute([':name' => $name, ':email' => $email, ':id' => $id]);
+    }
 }
