@@ -61,3 +61,11 @@ npm run tauri build
 ## Notes
 - Keep secrets out of version control; use `.env.example` as your template.
 - If you change icons, update `src-tauri/tauri.conf.json` `bundle.icon` to match.
+
+## Recent changes (summary)
+- Added profile page (`?page=profile`) with avatar/status card and editable name/email/password; backend endpoints `/auth/me` and `/auth/profile`.
+- Moved profile access to a round avatar in the top bar; removed logout from the sidebar (logout now in the top bar).
+- Refreshed dashboard styling to a card-based layout with soft shadows and reorganized chart/summary panels.
+- Login/forgot/reset screens restyled with gradient background and pill inputs/buttons.
+- Password reset flow: `/auth/forgot` logs reset URL to `storage/logs/app.log` in dev; `/auth/reset` consumes token + new password. Tokens expire after 1 hour.
+- Tailwind rebuild recommended after UI tweaks: `npm run build:css` (or `npm run watch:css`).
