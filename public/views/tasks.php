@@ -10,12 +10,14 @@
         <button id="taskAddBtn" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">Add Task</button>
     </div>
     <div class="flex gap-2 mb-4">
-        <select id="taskStatusFilter" class="border border-border px-3 py-2 rounded text-sm focus:outline-none focus:ring-2 focus:ring-accent/30">
+        <label class="sr-only" for="taskStatusFilter">Status</label>
+        <select id="taskStatusFilter" name="taskStatusFilter" autocomplete="off" class="border border-border px-3 py-2 rounded text-sm focus:outline-none focus:ring-2 focus:ring-accent/30">
             <option value="">All statuses</option>
             <option value="pending">Pending</option>
             <option value="done">Done</option>
         </select>
-        <input id="taskDueFilter" type="date" class="border border-border px-3 py-2 rounded text-sm focus:outline-none focus:ring-2 focus:ring-accent/30">
+        <label class="sr-only" for="taskDueFilter">Due date</label>
+        <input id="taskDueFilter" name="taskDueFilter" type="date" autocomplete="off" class="border border-border px-3 py-2 rounded text-sm focus:outline-none focus:ring-2 focus:ring-accent/30">
         <button id="taskFilterBtn" class="px-3 py-2 border border-border rounded text-sm hover:bg-gray-100 transition">Filter</button>
     </div>
     <div id="taskListWrap" class="bg-white border border-border rounded-card shadow-card overflow-x-auto">
@@ -49,33 +51,33 @@
             <div id="taskFormError" class="sm:col-span-2 text-sm text-red-600 hidden"></div>
             <input type="hidden" name="id">
             <div class="sm:col-span-2">
-                <label class="block text-sm">Title</label>
-                <input name="title" class="w-full border border-border px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-accent/30" required>
+                <label class="block text-sm" for="taskTitleInput">Title</label>
+                <input id="taskTitleInput" name="title" autocomplete="off" class="w-full border border-border px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-accent/30" required>
             </div>
             <div class="sm:col-span-2">
-                <label class="block text-sm">Description</label>
-                <textarea name="description" class="w-full border border-border px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-accent/30"></textarea>
+                <label class="block text-sm" for="taskDescInput">Description</label>
+                <textarea id="taskDescInput" name="description" autocomplete="off" class="w-full border border-border px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-accent/30"></textarea>
             </div>
             <div>
-                <label class="block text-sm">Due Date</label>
-                <input name="due_date" class="w-full border border-border px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-accent/30" type="date">
+                <label class="block text-sm" for="taskDueInput">Due Date</label>
+                <input id="taskDueInput" name="due_date" autocomplete="off" class="w-full border border-border px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-accent/30" type="date">
             </div>
             <div>
-                <label class="block text-sm">Status</label>
-                <select name="status" class="w-full border border-border px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-accent/30">
+                <label class="block text-sm" for="taskStatusSelect">Status</label>
+                <select id="taskStatusSelect" name="status" autocomplete="off" class="w-full border border-border px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-accent/30">
                     <option value="pending">Pending</option>
                     <option value="done">Done</option>
                 </select>
             </div>
             <div>
-                <label class="block text-sm">Lead (optional)</label>
-                <select name="lead_id" id="taskLeadSelect" class="w-full border border-border px-3 py-2 rounded">
+                <label class="block text-sm" for="taskLeadSelect">Lead (optional)</label>
+                <select name="lead_id" id="taskLeadSelect" autocomplete="off" class="w-full border border-border px-3 py-2 rounded">
                     <option value="">None</option>
                 </select>
             </div>
             <div>
-                <label class="block text-sm">Contact (optional)</label>
-                <select name="contact_id" id="taskContactSelect" class="w-full border border-border px-3 py-2 rounded">
+                <label class="block text-sm" for="taskClientSelect">Client (optional)</label>
+                <select name="client_id" id="taskClientSelect" autocomplete="off" class="w-full border border-border px-3 py-2 rounded">
                     <option value="">None</option>
                 </select>
             </div>

@@ -2,7 +2,9 @@
   "name": "crm/app",
   "description": "Lightweight PHP CRM backend",
   "type": "project",
-  "require": {},
+  "require": {
+    "phpmailer/phpmailer": "^7.0"
+  },
   "autoload": {
     "psr-4": {
       "": "src/"

@@ -1,6 +1,8 @@
 <?php
 // Basic layout wrapper
-?><!doctype html>
+$appVersion = '2025-01-01-1'; // bump this when you deploy
+?>
+<!doctype html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -10,13 +12,44 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/assets/css/tailwind.css">
+    <link rel="stylesheet" href="/assets/css/tailwind.css?v=<?php echo htmlspecialchars($appVersion, ENT_QUOTES); ?>">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script defer src="/assets/js/apiClient.js"></script>
-    <script defer src="/assets/js/clientProfile.js"></script>
-    <script defer src="/assets/js/ui.js"></script>
-    <script defer src="/assets/js/app.js"></script>
+    <script defer src="/assets/js/apiClient.js?v=<?php echo htmlspecialchars($appVersion, ENT_QUOTES); ?>"></script>
+    <script defer src="/assets/js/ui.js?v=<?php echo htmlspecialchars($appVersion, ENT_QUOTES); ?>"></script>
+    <script defer src="/assets/js/common.js?v=<?php echo htmlspecialchars($appVersion, ENT_QUOTES); ?>"></script>
+    <?php if (($page ?? '') === 'login'): ?>
+        <script defer src="/assets/js/auth.js?v=<?php echo htmlspecialchars($appVersion, ENT_QUOTES); ?>"></script>
+    <?php endif; ?>
+    <?php if (($page ?? '') === 'leads'): ?>
+        <script defer src="/assets/js/leads.js?v=<?php echo htmlspecialchars($appVersion, ENT_QUOTES); ?>"></script>
+    <?php endif; ?>
+    <?php if (($page ?? '') === 'contacts'): ?>
+        <script defer src="/assets/js/clients.js?v=<?php echo htmlspecialchars($appVersion, ENT_QUOTES); ?>"></script>
+    <?php endif; ?>
+    <?php if (($page ?? '') === 'deals'): ?>
+        <script defer src="/assets/js/deals.js?v=<?php echo htmlspecialchars($appVersion, ENT_QUOTES); ?>"></script>
+    <?php endif; ?>
+    <?php if (($page ?? '') === 'tasks'): ?>
+        <script defer src="/assets/js/tasks.js?v=<?php echo htmlspecialchars($appVersion, ENT_QUOTES); ?>"></script>
+    <?php endif; ?>
+    <?php if (($page ?? '') === 'reports'): ?>
+        <script defer src="/assets/js/reports.js?v=<?php echo htmlspecialchars($appVersion, ENT_QUOTES); ?>"></script>
+    <?php endif; ?>
+    <?php if (($page ?? '') === 'dashboard'): ?>
+        <script defer src="/assets/js/dashboard.js?v=<?php echo htmlspecialchars($appVersion, ENT_QUOTES); ?>"></script>
+    <?php endif; ?>
+    <?php if (($page ?? '') === 'ai-assistant'): ?>
+        <script defer src="/assets/js/ai.js?v=<?php echo htmlspecialchars($appVersion, ENT_QUOTES); ?>"></script>
+    <?php endif; ?>
+    <?php if (($page ?? '') === 'profile'): ?>
+        <script defer src="/assets/js/profile.js?v=<?php echo htmlspecialchars($appVersion, ENT_QUOTES); ?>"></script>
+    <?php endif; ?>
+    <?php if (($page ?? '') === 'client-profile'): ?>
+        <script defer src="/assets/js/clientProfile.js?v=<?php echo htmlspecialchars($appVersion, ENT_QUOTES); ?>"></script>
+    <?php endif; ?>
+    <script defer src="/assets/js/app.js?v=<?php echo htmlspecialchars($appVersion, ENT_QUOTES); ?>"></script>
 </head>
+
 <body class="min-h-screen bg-slate-50 text-text-primary font-sans dark:bg-dark.page dark:text-dark.textPrimary">
     <div class="flex min-h-screen relative">
         <?php $isLogin = ($page ?? '') === 'login'; ?>
@@ -32,9 +65,12 @@
                     $links = [
                         'dashboard' => ['label' => 'Dashboard', 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />'],
                         'leads' => ['label' => 'Leads', 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5 5 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />'],
-                        'contacts' => ['label' => 'Contacts', 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />'],
+                        'offplan-leads' => ['label' => 'Offplan Leads', 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 10h16M10 14h10M10 18h10M4 14h2m-2 4h2" />'],
+                        'contacts' => ['label' => 'Clients/Landlords', 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />'],
                         'client-profile' => ['label' => 'Client Profile', 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 11a3 3 0 10-6 0 3 3 0 006 0z" />'],
                         'deals' => ['label' => 'Deals', 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M3 10h11M9 21V3m0 18l5-5m-5 5l-5-5" />'],
+                        'tenancy-contracts' => ['label' => 'Tenancy Contract/Record', 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M7 7h10M7 11h7M9 15h5m-9 4h14a2 2 0 002-2V7a2 2 0 00-2-2h-3l-2-2H9L7 5H4a2 2 0 00-2 2v10a2 2 0 002 2z" />'],
+                        'rental-agreements' => ['label' => 'Rental Agreements', 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M7 7h10M7 11h7M9 15h5m-9 4h14a2 2 0 002-2V7a2 2 0 00-2-2h-3l-2-2H9L7 5H4a2 2 0 00-2 2v10a2 2 0 002 2z" />'],
                         'tasks' => ['label' => 'Tasks', 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m-7 4h8a2 2 0 002-2V6a2 2 0 00-2-2H7a2 2 0 00-2 2v12a2 2 0 002 2zM9 8h6" />'],
                         'reports' => ['label' => 'Reports', 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-6a2 2 0 012-2h4m4 0h-4m4 0v6m-4-6V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2h6" />'],
                         'ai-assistant' => ['label' => 'AI Assistant', 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6l4 2" />'],

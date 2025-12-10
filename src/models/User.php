@@ -33,31 +33,33 @@ class User
 
     public static function findByToken(string $token): ?array
     {
+        $tokenHash = hash('sha256', $token);
         $stmt = db()->prepare(
             'SELECT u.* FROM users u
              JOIN auth_tokens t ON t.user_id = u.id
              WHERE t.token = :token AND t.expires_at > NOW()
              LIMIT 1'
         );
-        $stmt->execute([':token' => $token]);
+        $stmt->execute([':token' => $tokenHash]);
         $user = $stmt->fetch();
         return $user ?: null;
     }
 
-    public static function storeToken(int $userId, string $token, string $expiresAt): void
+    public static function storeToken(int $userId, string $tokenHash, string $expiresAt): void
     {
         $stmt = db()->prepare('INSERT INTO auth_tokens (user_id, token, expires_at, created_at) VALUES (:user_id, :token, :expires_at, NOW())');
         $stmt->execute([
             ':user_id' => $userId,
-            ':token' => $token,
+            ':token' => $tokenHash,
             ':expires_at' => $expiresAt,
         ]);
     }
 
     public static function deleteToken(string $token): void
     {
+        $tokenHash = hash('sha256', $token);
         $stmt = db()->prepare('DELETE FROM auth_tokens WHERE token = :token');
-        $stmt->execute([':token' => $token]);
+        $stmt->execute([':token' => $tokenHash]);
     }
 
     public static function deleteTokensForUser(int $userId): void

@@ -3,8 +3,10 @@
 require_once __DIR__ . '/../services/AuthService.php';
 require_once __DIR__ . '/../middleware/AuthMiddleware.php';
 require_once __DIR__ . '/../services/Response.php';
+require_once __DIR__ . '/../services/RateLimiter.php';
+require_once __DIR__ . '/BaseController.php';
 
-class AuthController
+class AuthController extends BaseController
 {
     private AuthService $auth;
 
@@ -28,6 +30,14 @@ class AuthController
     public function login(): void
     {
         $input = $this->getJsonInput();
+        $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+        $emailKey = strtolower(trim($input['email'] ?? ''));
+
+        $this->throttleOrFail('login:ip:' . $ip, 5, 60);
+        if ($emailKey !== '') {
+            $this->throttleOrFail('login:email:' . $emailKey, 5, 60);
+        }
+
         $result = $this->auth->login($input['email'] ?? '', $input['password'] ?? '');
 
         if (isset($result['errors'])) {
@@ -85,6 +95,13 @@ class AuthController
     {
         $input = $this->getJsonInput();
         $email = $input['email'] ?? '';
+
+        $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+        $this->throttleOrFail('forgot:ip:' . $ip, 5, 300);
+        if ($email) {
+            $this->throttleOrFail('forgot:email:' . strtolower($email), 3, 300);
+        }
+
         $this->auth->requestPasswordReset((string)$email);
         Response::success(['message' => 'If that email exists, a reset link has been sent.']);
     }
@@ -92,22 +109,24 @@ class AuthController
     public function reset(): void
     {
         $input = $this->getJsonInput();
-        $errors = Validator::required($input, ['token', 'password']);
+        $errors = Validator::required($input, ['email', 'token', 'password']);
+        if (!empty($input['email'])) {
+            $errors = array_merge($errors, Validator::email($input['email']));
+        }
         if ($errors) {
             Response::error('Validation failed', 422, $errors);
         }
-        $result = $this->auth->resetPassword((string)$input['token'], (string)$input['password']);
+
+        $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+        $email = strtolower(trim((string)$input['email']));
+        $this->throttleOrFail('reset:ip:' . $ip, 5, 300);
+        $this->throttleOrFail('reset:email:' . $email, 5, 300);
+
+        $result = $this->auth->resetPassword((string)$input['token'], (string)$input['password'], $email);
         if (isset($result['errors'])) {
             Response::error('Invalid or expired token', 422, $result['errors']);
         }
         Response::success(['message' => 'Password has been reset.']);
-    }
-
-    private function getJsonInput(): array
-    {
-        $raw = file_get_contents('php://input');
-        $data = json_decode($raw, true);
-        return is_array($data) ? $data : [];
     }
 
     private function getBearerToken(): ?string
@@ -117,5 +136,12 @@ class AuthController
             return substr($header, 7);
         }
         return null;
+    }
+
+    private function throttleOrFail(string $key, int $maxAttempts, int $decaySeconds): void
+    {
+        if (!RateLimiter::hit($key, $maxAttempts, $decaySeconds)) {
+            Response::error('Too many attempts. Try again later.', 429);
+        }
     }
 }

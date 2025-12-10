@@ -18,7 +18,19 @@ class AuthMiddleware
 
     private static function getBearerToken(): ?string
     {
-        $header = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
+        // Try common server vars first
+        $header = $_SERVER['HTTP_AUTHORIZATION'] ?? ($_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? '');
+
+        // Fallback to apache_request_headers when available (some hosts only populate there)
+        if ($header === '' && function_exists('apache_request_headers')) {
+            $headers = apache_request_headers();
+            if (isset($headers['Authorization'])) {
+                $header = $headers['Authorization'];
+            } elseif (isset($headers['authorization'])) {
+                $header = $headers['authorization'];
+            }
+        }
+
         if (function_exists('str_starts_with') && str_starts_with($header, 'Bearer ')) {
             return substr($header, 7);
         }

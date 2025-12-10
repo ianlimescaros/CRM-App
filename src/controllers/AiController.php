@@ -4,8 +4,9 @@ require_once __DIR__ . '/../middleware/AuthMiddleware.php';
 require_once __DIR__ . '/../services/Response.php';
 require_once __DIR__ . '/../services/Validator.php';
 require_once __DIR__ . '/../services/AiService.php';
+require_once __DIR__ . '/BaseController.php';
 
-class AiController
+class AiController extends BaseController
 {
     private AiService $ai;
 
@@ -54,10 +55,4 @@ class AiController
         Response::success(['message' => $result['text']]);
     }
 
-    private function getJsonInput(): array
-    {
-        $raw = file_get_contents('php://input');
-        $data = json_decode($raw, true);
-        return is_array($data) ? $data : [];
-    }
 }

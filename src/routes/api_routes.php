@@ -2,7 +2,7 @@
 
 require_once __DIR__ . '/../controllers/AuthController.php';
 require_once __DIR__ . '/../controllers/LeadController.php';
-require_once __DIR__ . '/../controllers/ContactController.php';
+require_once __DIR__ . '/../controllers/ClientController.php';
 require_once __DIR__ . '/../controllers/DealController.php';
 require_once __DIR__ . '/../controllers/TaskController.php';
 require_once __DIR__ . '/../controllers/AiController.php';
@@ -22,24 +22,29 @@ return [
     ['method' => 'DELETE', 'path' => '/leads/{id}', 'handler' => [LeadController::class, 'destroy']],
     ['method' => 'PATCH', 'path' => '/leads/bulk', 'handler' => [LeadController::class, 'bulkUpdate']],
 
-    ['method' => 'GET', 'path' => '/contacts', 'handler' => [ContactController::class, 'index']],
-    ['method' => 'POST', 'path' => '/contacts', 'handler' => [ContactController::class, 'store']],
-    ['method' => 'GET', 'path' => '/contacts/{id}', 'handler' => [ContactController::class, 'show']],
-    ['method' => 'GET', 'path' => '/contacts/{id}/timeline', 'handler' => [ContactController::class, 'timeline']],
-    ['method' => 'GET', 'path' => '/contacts/{id}/files', 'handler' => [ContactController::class, 'files']],
-    ['method' => 'POST', 'path' => '/contacts/{id}/files', 'handler' => [ContactController::class, 'files']],
-    ['method' => 'DELETE', 'path' => '/contacts/{id}/files', 'handler' => [ContactController::class, 'files']],
-    ['method' => 'GET', 'path' => '/contacts/{id}/notes', 'handler' => [ContactController::class, 'notes']],
-    ['method' => 'POST', 'path' => '/contacts/{id}/notes', 'handler' => [ContactController::class, 'notes']],
-    ['method' => 'POST', 'path' => '/contacts/{id}/tasks', 'handler' => [ContactController::class, 'addTask']],
-    ['method' => 'POST', 'path' => '/contacts/{id}/deals', 'handler' => [ContactController::class, 'addDeal']],
-    ['method' => 'PUT', 'path' => '/contacts/{id}', 'handler' => [ContactController::class, 'update']],
-    ['method' => 'DELETE', 'path' => '/contacts/{id}', 'handler' => [ContactController::class, 'destroy']],
+    ['method' => 'GET', 'path' => '/clients', 'handler' => [ClientController::class, 'index']],
+    ['method' => 'POST', 'path' => '/clients', 'handler' => [ClientController::class, 'store']],
+    ['method' => 'GET', 'path' => '/clients/{id}', 'handler' => [ClientController::class, 'show']],
+    ['method' => 'GET', 'path' => '/clients/{id}/timeline', 'handler' => [ClientController::class, 'timeline']],
+    ['method' => 'GET', 'path' => '/clients/{id}/files', 'handler' => [ClientController::class, 'files']],
+    ['method' => 'POST', 'path' => '/clients/{id}/files', 'handler' => [ClientController::class, 'files']],
+    ['method' => 'DELETE', 'path' => '/clients/{id}/files', 'handler' => [ClientController::class, 'files']],
+    ['method' => 'GET', 'path' => '/clients/{id}/files/{file_id}/download', 'handler' => [ClientController::class, 'downloadFile']],
+    ['method' => 'GET', 'path' => '/clients/{id}/notes', 'handler' => [ClientController::class, 'notes']],
+    ['method' => 'POST', 'path' => '/clients/{id}/notes', 'handler' => [ClientController::class, 'notes']],
+    ['method' => 'POST', 'path' => '/clients/{id}/tasks', 'handler' => [ClientController::class, 'addTask']],
+    ['method' => 'POST', 'path' => '/clients/{id}/deals', 'handler' => [ClientController::class, 'addDeal']],
+    ['method' => 'PUT', 'path' => '/clients/{id}', 'handler' => [ClientController::class, 'update']],
+    ['method' => 'DELETE', 'path' => '/clients/{id}', 'handler' => [ClientController::class, 'destroy']],
 
     ['method' => 'GET', 'path' => '/deals', 'handler' => [DealController::class, 'index']],
     ['method' => 'POST', 'path' => '/deals', 'handler' => [DealController::class, 'store']],
     ['method' => 'PUT', 'path' => '/deals/{id}', 'handler' => [DealController::class, 'update']],
     ['method' => 'DELETE', 'path' => '/deals/{id}', 'handler' => [DealController::class, 'destroy']],
+    ['method' => 'GET', 'path' => '/deals/{id}/files', 'handler' => [DealController::class, 'files']],
+    ['method' => 'POST', 'path' => '/deals/{id}/files', 'handler' => [DealController::class, 'files']],
+    ['method' => 'DELETE', 'path' => '/deals/{id}/files', 'handler' => [DealController::class, 'files']],
+    ['method' => 'GET', 'path' => '/deals/{id}/files/{file_id}/download', 'handler' => [DealController::class, 'downloadFile']],
 
     ['method' => 'GET', 'path' => '/tasks', 'handler' => [TaskController::class, 'index']],
     ['method' => 'POST', 'path' => '/tasks', 'handler' => [TaskController::class, 'store']],

@@ -4,9 +4,26 @@ require_once __DIR__ . '/../config/database.php';
 
 class Task
 {
+    private static function clientColumn(): string
+    {
+        static $col = null;
+        if ($col !== null) {
+            return $col;
+        }
+        try {
+            db()->query('SELECT client_id FROM tasks LIMIT 0');
+            $col = 'client_id';
+        } catch (PDOException $e) {
+            $col = 'contact_id';
+        }
+        return $col;
+    }
+
     public static function all(int $userId, array $filters = [], array $pagination = []): array
     {
-        $sql = 'SELECT * FROM tasks WHERE user_id = :user_id';
+        $clientCol = self::clientColumn();
+        $clientAlias = $clientCol === 'client_id' ? 'client_id' : "{$clientCol} AS client_id";
+        $sql = "SELECT t.*, t.{$clientAlias} FROM tasks t WHERE user_id = :user_id";
         $params = [':user_id' => $userId];
 
         if (!empty($filters['status'])) {
@@ -17,9 +34,9 @@ class Task
             $sql .= ' AND due_date = :due_date';
             $params[':due_date'] = $filters['due_date'];
         }
-        if (!empty($filters['contact_id'])) {
-            $sql .= ' AND contact_id = :contact_id';
-            $params[':contact_id'] = (int)$filters['contact_id'];
+        if (!empty($filters['client_id'])) {
+            $sql .= " AND {$clientCol} = :client_id";
+            $params[':client_id'] = (int)$filters['client_id'];
         }
         if (!empty($filters['lead_id'])) {
             $sql .= ' AND lead_id = :lead_id';
@@ -55,6 +72,7 @@ class Task
 
     public static function countAll(int $userId, array $filters = []): int
     {
+        $clientCol = self::clientColumn();
         $sql = 'SELECT COUNT(*) as cnt FROM tasks WHERE user_id = :user_id';
         $params = [':user_id' => $userId];
         if (!empty($filters['status'])) {
@@ -65,9 +83,9 @@ class Task
             $sql .= ' AND due_date = :due_date';
             $params[':due_date'] = $filters['due_date'];
         }
-        if (!empty($filters['contact_id'])) {
-            $sql .= ' AND contact_id = :contact_id';
-            $params[':contact_id'] = (int)$filters['contact_id'];
+        if (!empty($filters['client_id'])) {
+            $sql .= " AND {$clientCol} = :client_id";
+            $params[':client_id'] = (int)$filters['client_id'];
         }
         if (!empty($filters['lead_id'])) {
             $sql .= ' AND lead_id = :lead_id';
@@ -81,7 +99,9 @@ class Task
 
     public static function find(int $userId, int $id): ?array
     {
-        $stmt = db()->prepare('SELECT * FROM tasks WHERE id = :id AND user_id = :user_id LIMIT 1');
+        $clientCol = self::clientColumn();
+        $clientAlias = $clientCol === 'client_id' ? 'client_id' : "{$clientCol} AS client_id";
+        $stmt = db()->prepare("SELECT t.*, t.{$clientAlias} FROM tasks t WHERE id = :id AND user_id = :user_id LIMIT 1");
         $stmt->execute([':id' => $id, ':user_id' => $userId]);
         $task = $stmt->fetch();
         return $task ?: null;
@@ -89,14 +109,15 @@ class Task
 
     public static function create(int $userId, array $data): int
     {
+        $clientCol = self::clientColumn();
         $stmt = db()->prepare(
-            'INSERT INTO tasks (user_id, lead_id, contact_id, title, description, due_date, status, created_at)
-             VALUES (:user_id, :lead_id, :contact_id, :title, :description, :due_date, :status, NOW())'
+            "INSERT INTO tasks (user_id, lead_id, {$clientCol}, title, description, due_date, status, created_at)
+             VALUES (:user_id, :lead_id, :client_id, :title, :description, :due_date, :status, NOW())"
         );
         $stmt->execute([
             ':user_id' => $userId,
             ':lead_id' => $data['lead_id'] ?? null,
-            ':contact_id' => $data['contact_id'] ?? null,
+            ':client_id' => $data['client_id'] ?? null,
             ':title' => $data['title'],
             ':description' => $data['description'] ?? null,
             ':due_date' => $data['due_date'] ?? null,
@@ -107,10 +128,11 @@ class Task
 
     public static function updateTask(int $userId, int $id, array $data): bool
     {
+        $clientCol = self::clientColumn();
         $stmt = db()->prepare(
-            'UPDATE tasks SET title = :title, description = :description, due_date = :due_date,
-             status = :status, lead_id = :lead_id, contact_id = :contact_id
-             WHERE id = :id AND user_id = :user_id'
+            "UPDATE tasks SET title = :title, description = :description, due_date = :due_date,
+             status = :status, lead_id = :lead_id, {$clientCol} = :client_id
+             WHERE id = :id AND user_id = :user_id"
         );
         $stmt->execute([
             ':title' => $data['title'],
@@ -118,7 +140,7 @@ class Task
             ':due_date' => $data['due_date'] ?? null,
             ':status' => $data['status'],
             ':lead_id' => $data['lead_id'] ?? null,
-            ':contact_id' => $data['contact_id'] ?? null,
+            ':client_id' => $data['client_id'] ?? null,
             ':id' => $id,
             ':user_id' => $userId,
         ]);

@@ -4,10 +4,13 @@ require_once __DIR__ . '/../models/User.php';
 require_once __DIR__ . '/../models/PasswordReset.php';
 require_once __DIR__ . '/Validator.php';
 require_once __DIR__ . '/Logger.php';
+require_once __DIR__ . '/Mailer.php';
 
 class AuthService
 {
     private int $tokenTtlHours = 168; // 7 days
+    private int $resetExpiryMinutes = 30;
+    private int $maxResetFailures = 5;
 
     public function register(array $data): array
     {
@@ -88,23 +91,34 @@ class AuthService
             return;
         }
 
-        try {
-            $token = bin2hex(random_bytes(32));
-        } catch (Exception $e) {
-            $token = bin2hex(random_bytes(16));
-        }
+        // Use a 6-digit numeric token for reset
+        $code = str_pad((string)random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        $longToken = bin2hex(random_bytes(32));
 
-        $tokenHash = hash('sha256', $token);
-        $expiresAt = (new DateTime('+1 hour'))->format('Y-m-d H:i:s');
-        PasswordReset::store($email, $tokenHash, $expiresAt);
+        $tokenHash = hash('sha256', $longToken);
+        $codeHash = hash('sha256', $code);
+        $expiresAt = (new DateTime('+' . $this->resetExpiryMinutes . ' minutes'))->format('Y-m-d H:i:s');
+        PasswordReset::store($email, $tokenHash, $codeHash, $expiresAt);
 
         $appUrl = env('APP_URL', 'http://localhost');
-        $resetUrl = rtrim($appUrl, '/') . '/index.php?page=login&reset_token=' . urlencode($token);
-        Logger::info('Password reset requested', ['email' => $email, 'reset_url' => $resetUrl]);
+        $resetUrl = rtrim($appUrl, '/') . '/index.php?page=login&reset_token=' . urlencode($longToken);
+
+        // Attempt to email the reset link; do not expose raw tokens in logs.
+        $sent = Mailer::sendResetEmail($email, $resetUrl, $code);
+        if (!$sent) {
+            Logger::error('Password reset email failed to send', ['email' => $email]);
+        } else {
+            Logger::info('Password reset requested', ['email' => $email]);
+        }
     }
 
-    public function resetPassword(string $token, string $newPassword): array
+    public function resetPassword(string $token, string $newPassword, string $email): array
     {
+        $email = trim(strtolower($email));
+        if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return ['errors' => ['email' => 'Invalid email']];
+        }
+
         // Accept raw token or full URL containing reset_token param
         $token = trim($token);
         if (str_contains($token, 'reset_token=')) {
@@ -123,12 +137,22 @@ class AuthService
         }
         $token = trim($token, " \t\n\r\0\x0B\"'");
 
-        if (!preg_match('/^[a-f0-9]{32,64}$/i', $token) || trim($newPassword) === '') {
+        if (trim($newPassword) === '') {
             return ['errors' => ['token' => 'Invalid token or password']];
         }
 
-        $entry = PasswordReset::findValidByToken($token);
+        $isCode = preg_match('/^\d{6}$/', $token) === 1;
+        $entry = $isCode
+            ? PasswordReset::findValidByCode($email, $token)
+            : PasswordReset::findValidByToken($email, $token);
+
         if (!$entry) {
+            PasswordReset::recordFailure($email, $this->maxResetFailures);
+            return ['errors' => ['token' => 'Invalid or expired token']];
+        }
+
+        if (($entry['attempts'] ?? 0) >= $this->maxResetFailures) {
+            PasswordReset::deleteByEmail($email);
             return ['errors' => ['token' => 'Invalid or expired token']];
         }
 
@@ -149,8 +173,9 @@ class AuthService
     private function issueToken(int $userId): string
     {
         $token = bin2hex(random_bytes(32));
+        $tokenHash = hash('sha256', $token);
         $expiresAt = (new DateTime())->modify("+{$this->tokenTtlHours} hours")->format('Y-m-d H:i:s');
-        User::storeToken($userId, $token, $expiresAt);
+        User::storeToken($userId, $tokenHash, $expiresAt);
         return $token;
     }
 

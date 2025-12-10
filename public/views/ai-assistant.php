@@ -6,7 +6,8 @@
             <div class="bg-white rounded-card p-4 h-full flex flex-col">
                 <h2 class="font-semibold mb-2">Summarize Notes</h2>
                 <form id="aiSummarizeForm" class="space-y-3">
-                    <textarea name="notes" rows="6" class="w-full border border-border px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-accent/40" placeholder="Paste notes here"></textarea>
+                    <label class="sr-only" for="aiNotes">Notes</label>
+                    <textarea id="aiNotes" name="notes" autocomplete="off" rows="6" class="w-full border border-border px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-accent/40" placeholder="Paste notes here"></textarea>
                     <div class="flex items-center gap-3">
                         <button class="px-4 py-2 bg-blue-600 text-white rounded" type="submit">Summarize</button>
                         <div id="aiSummaryStatus" class="text-sm text-gray-500 flex items-center gap-2"></div>
@@ -26,12 +27,12 @@
                 <h2 class="font-semibold mb-2">Suggest Follow-up</h2>
                 <form id="aiFollowupForm" class="space-y-3">
                     <div>
-                        <label class="block text-sm">Lead Name</label>
-                        <input name="lead_name" class="w-full border border-border px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-accent/40">
+                        <label class="block text-sm" for="aiLeadName">Lead Name</label>
+                        <input id="aiLeadName" name="lead_name" autocomplete="name" class="w-full border border-border px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-accent/40">
                     </div>
                     <div>
-                        <label class="block text-sm">Context</label>
-                        <textarea name="context" rows="4" class="w-full border border-border px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-accent/40"></textarea>
+                        <label class="block text-sm" for="aiContext">Context</label>
+                        <textarea id="aiContext" name="context" autocomplete="off" rows="4" class="w-full border border-border px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-accent/40"></textarea>
                     </div>
                     <div class="flex items-center gap-3">
                         <button class="px-4 py-2 bg-blue-600 text-white rounded" type="submit">Generate</button>

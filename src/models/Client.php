@@ -2,11 +2,11 @@
 
 require_once __DIR__ . '/../config/database.php';
 
-class Contact
+class Client
 {
     public static function all(int $userId, array $pagination = [], array $filters = []): array
     {
-        $sql = 'SELECT * FROM contacts WHERE user_id = :user_id';
+        $sql = 'SELECT * FROM clients WHERE user_id = :user_id';
         $params = [':user_id' => $userId];
         if (!empty($filters['search'])) {
             $sql .= ' AND (full_name LIKE :q OR email LIKE :q OR company LIKE :q)';
@@ -36,7 +36,7 @@ class Contact
 
     public static function countAll(int $userId, array $filters = []): int
     {
-        $sql = 'SELECT COUNT(*) as cnt FROM contacts WHERE user_id = :user_id';
+        $sql = 'SELECT COUNT(*) as cnt FROM clients WHERE user_id = :user_id';
         $params = [':user_id' => $userId];
         if (!empty($filters['search'])) {
             $sql .= ' AND (full_name LIKE :q OR email LIKE :q OR company LIKE :q)';
@@ -50,24 +50,24 @@ class Contact
 
     public static function find(int $userId, int $id): ?array
     {
-        $stmt = db()->prepare('SELECT * FROM contacts WHERE id = :id AND user_id = :user_id LIMIT 1');
+        $stmt = db()->prepare('SELECT * FROM clients WHERE id = :id AND user_id = :user_id LIMIT 1');
         $stmt->execute([':id' => $id, ':user_id' => $userId]);
-        $contact = $stmt->fetch();
-        return $contact ?: null;
+        $client = $stmt->fetch();
+        return $client ?: null;
     }
 
     public static function findByEmail(int $userId, string $email): ?array
     {
-        $stmt = db()->prepare('SELECT * FROM contacts WHERE email = :email AND user_id = :user_id LIMIT 1');
+        $stmt = db()->prepare('SELECT * FROM clients WHERE email = :email AND user_id = :user_id LIMIT 1');
         $stmt->execute([':email' => $email, ':user_id' => $userId]);
-        $contact = $stmt->fetch();
-        return $contact ?: null;
+        $client = $stmt->fetch();
+        return $client ?: null;
     }
 
     public static function create(int $userId, array $data): int
     {
         $stmt = db()->prepare(
-            'INSERT INTO contacts (user_id, full_name, email, phone, company, position, created_at)
+            'INSERT INTO clients (user_id, full_name, email, phone, company, position, created_at)
              VALUES (:user_id, :full_name, :email, :phone, :company, :position, NOW())'
         );
         $stmt->execute([
@@ -81,10 +81,10 @@ class Contact
         return (int)db()->lastInsertId();
     }
 
-    public static function updateContact(int $userId, int $id, array $data): bool
+    public static function updateClient(int $userId, int $id, array $data): bool
     {
         $stmt = db()->prepare(
-            'UPDATE contacts SET full_name = :full_name, email = :email, phone = :phone,
+            'UPDATE clients SET full_name = :full_name, email = :email, phone = :phone,
              company = :company, position = :position
              WHERE id = :id AND user_id = :user_id'
         );
@@ -100,9 +100,9 @@ class Contact
         return $stmt->rowCount() > 0;
     }
 
-    public static function deleteContact(int $userId, int $id): bool
+    public static function deleteClient(int $userId, int $id): bool
     {
-        $stmt = db()->prepare('DELETE FROM contacts WHERE id = :id AND user_id = :user_id');
+        $stmt = db()->prepare('DELETE FROM clients WHERE id = :id AND user_id = :user_id');
         $stmt->execute([':id' => $id, ':user_id' => $userId]);
         return $stmt->rowCount() > 0;
     }

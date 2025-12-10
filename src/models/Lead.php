@@ -20,7 +20,7 @@ class Lead
 
         $orderBy = $pagination['order_by'] ?? 'created_at';
         $orderDir = strtoupper($pagination['order_dir'] ?? 'DESC');
-        $allowedOrder = ['created_at', 'updated_at', 'name', 'status', 'source', 'budget', 'last_contact_at', 'owner_id'];
+        $allowedOrder = ['created_at', 'updated_at', 'name', 'status', 'source', 'property_for', 'payment_option', 'interested_property', 'area', 'budget', 'currency', 'last_contact_at', 'owner_id'];
         if (!in_array($orderBy, $allowedOrder, true)) {
             $orderBy = 'created_at';
         }
@@ -73,18 +73,23 @@ class Lead
     public static function create(int $userId, array $data): int
     {
         $stmt = db()->prepare(
-            'INSERT INTO leads (user_id, owner_id, name, email, phone, status, source, budget, notes, last_contact_at, created_at)
-             VALUES (:user_id, :owner_id, :name, :email, :phone, :status, :source, :budget, :notes, :last_contact_at, NOW())'
+            'INSERT INTO leads (user_id, owner_id, property_for, payment_option, interested_property, area, name, email, phone, status, source, budget, currency, notes, last_contact_at, created_at)
+             VALUES (:user_id, :owner_id, :property_for, :payment_option, :interested_property, :area, :name, :email, :phone, :status, :source, :budget, :currency, :notes, :last_contact_at, NOW())'
         );
         $stmt->execute([
             ':user_id' => $userId,
             ':owner_id' => $data['owner_id'] ?? null,
+            ':property_for' => $data['property_for'] ?? null,
+            ':payment_option' => $data['payment_option'] ?? null,
+            ':interested_property' => $data['interested_property'] ?? null,
+            ':area' => $data['area'] ?? null,
             ':name' => $data['name'],
             ':email' => $data['email'] ?? null,
             ':phone' => $data['phone'] ?? null,
             ':status' => $data['status'] ?? 'new',
             ':source' => $data['source'] ?? null,
             ':budget' => $data['budget'] ?? null,
+            ':currency' => $data['currency'] ?? null,
             ':notes' => $data['notes'] ?? null,
             ':last_contact_at' => $data['last_contact_at'] ?? null,
         ]);
@@ -95,7 +100,7 @@ class Lead
     {
         $stmt = db()->prepare(
             'UPDATE leads SET name = :name, email = :email, phone = :phone, status = :status,
-             source = :source, budget = :budget, notes = :notes, owner_id = :owner_id, last_contact_at = :last_contact_at
+             source = :source, property_for = :property_for, payment_option = :payment_option, interested_property = :interested_property, area = :area, budget = :budget, currency = :currency, notes = :notes, owner_id = :owner_id, last_contact_at = :last_contact_at
              WHERE id = :id AND user_id = :user_id'
         );
         $stmt->execute([
@@ -104,7 +109,12 @@ class Lead
             ':phone' => $data['phone'] ?? null,
             ':status' => $data['status'],
             ':source' => $data['source'] ?? null,
+            ':property_for' => $data['property_for'] ?? null,
+            ':payment_option' => $data['payment_option'] ?? null,
+            ':interested_property' => $data['interested_property'] ?? null,
+            ':area' => $data['area'] ?? null,
             ':budget' => $data['budget'] ?? null,
+            ':currency' => $data['currency'] ?? null,
             ':notes' => $data['notes'] ?? null,
             ':owner_id' => $data['owner_id'] ?? null,
             ':last_contact_at' => $data['last_contact_at'] ?? null,

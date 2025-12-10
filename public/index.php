@@ -4,6 +4,7 @@ $allowedPages = [
     'login',
     'dashboard',
     'leads',
+    'offplan-leads',
     'contacts',
     'client-profile',
     'profile',
@@ -11,6 +12,8 @@ $allowedPages = [
     'tasks',
     'reports',
     'ai-assistant',
+    'tenancy-contracts',
+    'rental-agreements',
 ];
 
 $page = $_GET['page'] ?? 'login';

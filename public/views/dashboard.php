@@ -9,7 +9,7 @@
             <div class="flex flex-wrap items-center gap-2">
                 <div class="hidden sm:flex items-center bg-white rounded-full shadow-sm border border-slate-200 px-3 py-2">
                     <svg class="h-4 w-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m21 21-4.35-4.35m0 0A7.5 7.5 0 1 0 6.5 6.5a7.5 7.5 0 0 0 10.15 10.15Z" /></svg>
-                    <input class="ml-2 text-sm focus:outline-none bg-transparent" placeholder="Search..." />
+                    <input id="dashboardSearch" name="dashboardSearch" autocomplete="off" class="ml-2 text-sm focus:outline-none bg-transparent" placeholder="Search..." />
                 </div>
                 <a class="px-4 py-2 bg-indigo-600 text-white rounded-full shadow-sm hover:bg-indigo-700 transition text-sm" href="/index.php?page=leads">+ New Lead</a>
                 <a class="px-4 py-2 border border-slate-200 rounded-full shadow-sm hover:bg-slate-50 transition text-sm" href="/index.php?page=tasks">+ New Task</a>
