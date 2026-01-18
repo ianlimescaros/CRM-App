@@ -311,6 +311,7 @@ For API-only usage (headless), point your frontend or API client at `http://127.
 - Tailwind rebuild recommended after UI tweaks: `npm run build:css`.
 - PHPMailer is installed via Composer for SMTP sending.
  - Protect `storage/` and `.env` in production (e.g. via `.htaccess` or web server rules) so uploads and secrets are not directly accessible.
+   - A default `storage/.htaccess` is included in the repository to deny direct access; ensure equivalent NGINX rules are applied on your server.
 
 ## Password reset
 - `/auth/forgot` sends a 6-digit code + reset link via SMTP (configure `SMTP_*` in `.env`).

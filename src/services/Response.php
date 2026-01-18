@@ -13,6 +13,8 @@ class Response
     {
         http_response_code($status);
         self::cors();
+        // Emit security headers (CSP, HSTS when applicable, and other best-practice headers)
+        self::emitSecurityHeaders();
         header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
         header('Pragma: no-cache');
         header('Expires: 0');
@@ -67,6 +69,26 @@ class Response
 
         header('Access-Control-Allow-Headers: Content-Type, Authorization, X-CSRF-Token');
         header('Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS');
+    }
+
+    /**
+     * Emit a set of recommended security response headers. Kept small and conservative so it
+     * is safe to enable in most environments; production deployments should tune CSP/HSTS.
+     */
+    public static function emitSecurityHeaders(): void
+    {
+        header('X-Content-Type-Options: nosniff');
+        header('X-Frame-Options: DENY');
+        header('Referrer-Policy: no-referrer-when-downgrade');
+        // Modern browsers ignore X-XSS-Protection; setting to 0 avoids legacy quirks
+        header('X-XSS-Protection: 0');
+        // Conservative default CSP — keep tight but allow inline styles for current UI (review for stricter CSP)
+        header("Content-Security-Policy: default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'");
+
+        // Only set HSTS when running over HTTPS
+        if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') {
+            header('Strict-Transport-Security: max-age=63072000; includeSubDomains; preload');
+        }
     }
 
     private static function allowedOrigins(): array

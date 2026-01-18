@@ -135,5 +135,19 @@ class Validator
 
         return [];
     }
+
+    /**
+     * Ensure a given filesystem path is inside the canonical storage/uploads directory.
+     * Returns true only when the realpath of $path is a descendant of storage/uploads.
+     */
+    public static function isPathInUploads(string $path): bool
+    {
+        $uploadsDir = realpath(__DIR__ . '/../../storage/uploads');
+        $real = realpath($path);
+        if ($uploadsDir === false || $real === false) {
+            return false;
+        }
+        return str_starts_with($real, $uploadsDir);
+    }
 }
 

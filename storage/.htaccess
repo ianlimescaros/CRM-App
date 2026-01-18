@@ -1,0 +1,10 @@
+# Deny direct access to storage (uploads, logs, etc.)
+<IfModule mod_authz_core.c>
+    Require all denied
+</IfModule>
+<IfModule !mod_authz_core.c>
+    Deny from all
+</IfModule>
+
+# If using nginx, configure an equivalent rule to deny access to the `storage/` folder.
+# Keep this file in the repository so deploys to shared hosts don't accidentally expose uploads.

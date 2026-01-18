@@ -255,15 +255,25 @@ class DealController extends BaseController
             $mime = mime_content_type($path) ?: $mime;
         }
 
+        // Defense-in-depth: ensure the on-disk path is inside the canonical uploads directory
+        $uploadsDir = realpath(__DIR__ . '/../../storage/uploads');
+        $real = realpath($path);
+        if ($real === false || $uploadsDir === false || strpos($real, $uploadsDir) !== 0) {
+            Response::error('File not found', 404);
+        }
+        if (!is_file($real) || !is_readable($real)) {
+            Response::error('File not found', 404);
+        }
+
         // Sanitize filename to avoid header injection and support UTF-8
         $safeName = basename($filename);
         $safeName = preg_replace('/[\r\n\"]+/', '_', $safeName);
 
         header('Content-Type: ' . $mime);
-        header('Content-Length: ' . filesize($path));
+        header('Content-Length: ' . filesize($real));
         header('Content-Disposition: attachment; filename="' . $safeName . '"; filename*=UTF-8\'\'' . rawurlencode((string)$safeName));
-        readfile($path);
-        exit;
+        readfile($real);
+        exit;"
     }
 
     /**
