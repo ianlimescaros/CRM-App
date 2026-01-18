@@ -1,52 +1,197 @@
-# CRM App (Web)
 
-PHP/MySQL CRM with Tailwind UI, AI helpers, profile management, and password reset.
+# CRM App
+
+A modern, secure PHP/MySQL CRM for real estate and client management, featuring Tailwind UI, AI helpers, profile management, and password reset.
+
+---
+
+## Table of Contents
+
+- [Overview](#overview)
+- [Tech Stack](#tech-stack)
+- [Folder Structure](#folder-structure)
+- [Environment Variables](#environment-variables)
+- [Quick Start](#quick-start)
+- [Deployment](#deployment)
+- [Key Features & API Endpoints](#key-features--api-endpoints)
+- [UI Notes](#ui-notes)
+- [PDF Templates](#pdf-templates)
+- [Security Best Practices](#security-best-practices)
+- [Password Reset](#password-reset)
+- [Recent Changes](#recent-changes)
+- [Data Model Highlights](#data-model-highlights)
+- [DB Upgrade Guide](#db-upgrade-guide)
+- [Keyboard Shortcuts](#keyboard-shortcuts)
+- [Development Tips](#development-tips)
+
+---
 
 ## Overview
-- Small, single-repo CRM focused on real-estate style pipelines (leads → clients → deals → tasks).
-- Backend: vanilla PHP 8.x with simple routing/controllers (`src/`), MySQL via PDO, JSON APIs.
-- Frontend: Tailwind CSS, minimal JS, server-rendered views in `public/views` (no heavy framework).
-- Files and uploads stored under `storage/` (with `storage/uploads` for client/deal documents).
-- AI helper endpoints wrap an OpenAI-compatible LLM for summaries and follow-up suggestions.
 
-## Tech stack
-- PHP 8.x, MySQL 5.7+ or MariaDB 10+.
-- Tailwind CSS (built with `npm`), PostCSS.
-- PHPMailer for SMTP email (password reset, notifications).
-- Simple MVC-ish structure: `models`, `controllers`, `routes`, `services`, `middleware`.
+- CRM focused on real-estate pipelines (leads → clients → deals → tasks).
+- Backend: PHP 8.x, MySQL (PDO), JSON APIs, simple MVC structure.
+- Frontend: Tailwind CSS, minimal JS, server-rendered views.
+- File uploads stored in `storage/` (not web-accessible in production).
+- AI endpoints for summaries and follow-up suggestions.
 
-## Folder structure (high level)
-- `public/` – front controller (`index.php`), `api.php`, public assets, and Blade-like views.
-- `src/` – application code:
-  - `config/` – database, app, and mail configuration helpers.
-  - `controllers/` – auth, leads, clients, deals, tasks, AI helper controllers.
-  - `models/` – database models / repositories.
-  - `middleware/` – auth/session middleware and helpers.
-  - `routes/` – API route map (`api_routes.php`).
-  - `services/` – reusable services (mail, AI client, file storage, etc.).
-- `sql/` – schema and migration helpers (`schema.sql`, upgrade snippets).
-- `storage/` – logs, cache, and file uploads (make sure it is not web-accessible in production).
-- `docs/` – extra notes, diagrams, or future documentation.
+---
 
-## Environment variables (reference)
-These live in `.env` (never commit real secrets):
+## Tech Stack
 
-- Core app:
-  - `APP_URL` – base URL used in links and emails.
-  - `APP_TIMEZONE` – PHP timezone identifier (e.g. `Asia/Dubai`, `Europe/London`).
-- Database (MySQL/MariaDB):
-  - `DB_HOST`, `DB_PORT` – host and port for the DB server.
-  - `DB_NAME` – database name (e.g. `crm_app`).
-  - `DB_USER`, `DB_PASS` – credentials with permissions to create/alter tables.
-- LLM (AI helpers):
-  - `LLM_API_URL` – chat completions endpoint (OpenAI-compatible).
-  - `LLM_API_KEY` – API key/token.
-  - `LLM_MODEL` – model name (e.g. `gpt-4o-mini`).
-- SMTP (email/password reset):
-  - `SMTP_HOST`, `SMTP_PORT` – mail server and port.
-  - `SMTP_USER`, `SMTP_PASS` – mailbox username/password.
-  - `SMTP_FROM` – email shown as the sender.
-  - `SMTP_SECURE` – `tls` or `ssl` depending on your provider.
+- PHP 8.x, MySQL 5.7+/MariaDB 10+
+- Tailwind CSS, PostCSS, minimal JS
+- PHPMailer for SMTP
+- MVC-style structure
+
+---
+
+## Folder Structure
+
+- `public/` – Entry points, assets, views
+- `src/` – App code (config, controllers, models, middleware, routes, services)
+- `sql/` – Schema and migrations
+- `storage/` – Logs, cache, uploads (protect in production)
+- `docs/` – Documentation
+
+---
+
+## Environment Variables
+
+Copy `.env.example` to `.env` and set:
+
+```env
+APP_URL=http://127.0.0.1:8765
+APP_TIMEZONE=Asia/Dubai
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_NAME=crm_app
+DB_USER=your_db_user
+DB_PASS=your_db_password
+LLM_API_URL=https://api.openai.com/v1/chat/completions
+LLM_API_KEY=your_api_key
+LLM_MODEL=gpt-4o-mini
+SMTP_HOST=smtp.yourprovider.com
+SMTP_PORT=587
+SMTP_USER=your_mailbox@example.com
+SMTP_PASS=your_smtp_password
+SMTP_FROM=your_mailbox@example.com
+SMTP_SECURE=tls
+```
+
+---
+
+## Quick Start
+
+1. Copy `.env.example` to `.env` and configure.
+2. Import `sql/schema.sql` into MySQL.
+3. Start the PHP server:
+   ```
+   php -S 127.0.0.1:8765 -t public
+   ```
+4. (Optional) Build Tailwind CSS:
+   ```
+   npm install
+   npm run build:css
+   ```
+5. (Optional) Run tests:
+   ```
+   composer install --dev
+   composer test
+   ```
+6. Open [http://127.0.0.1:8765/index.php?page=login](http://127.0.0.1:8765/index.php?page=login)
+
+---
+
+## Deployment
+
+1. Build assets and dependencies locally.
+2. Upload `public/` to your web root, keep `src/`, `vendor/`, `storage/`, `.env`, and `sql/` above web root if possible.
+3. Set up `.env` on the server.
+4. Import schema via phpMyAdmin.
+5. Ensure PHP 8.x and required extensions are enabled.
+6. Test all features live.
+
+---
+
+## Key Features & API Endpoints
+
+- **Auth:** `/auth/register`, `/auth/login`, `/auth/logout`
+- **Password Reset:** `/auth/forgot`, `/auth/reset`
+- **Profile:** `/auth/me`, `/auth/profile`
+- **Leads, Clients, Deals, Tasks:** Full CRUD via RESTful endpoints (see `src/routes/api_routes.php`)
+- **AI Helpers:** `/ai/summarize`, `/ai/suggest-followup`
+
+---
+
+## UI Notes
+
+- Modern, responsive design.
+- Dashboard with cards and charts.
+- Profile management, file uploads, and PDF previews.
+
+---
+
+## PDF Templates
+
+- Place tenancy and NOC templates in `storage/templates/`.
+- Previews and overlays are managed in the corresponding JS and controller files.
+
+---
+
+## Security Best Practices
+
+- Protect `storage/` and `.env` in production.
+- Use strong passwords and secure SMTP credentials.
+- Set cookies with `HttpOnly`, `Secure`, and `SameSite=Strict`.
+- Always escape user-generated content in views.
+- Keep dependencies up to date.
+
+---
+
+## Password Reset
+
+- `/auth/forgot` sends a 6-digit code via SMTP.
+- `/auth/reset` accepts the code and new password.
+- Tokens expire after 1 hour.
+
+---
+
+## Recent Changes
+
+- Profile page and avatar in top bar.
+- Card-based dashboard.
+- Improved password reset flow.
+- UI/UX enhancements.
+
+---
+
+## Data Model Highlights
+
+- See `sql/schema.sql` for all required columns and relationships.
+- Upgrade scripts included for legacy support.
+
+---
+
+## DB Upgrade Guide
+
+- See the SQL snippets in this README for incremental upgrades and renaming.
+
+---
+
+## Keyboard Shortcuts
+
+- `Esc` closes modals.
+- `n` or `/` opens "New" modals.
+
+---
+
+## Development Tips
+
+- Use `npm run watch:css` for live Tailwind rebuilds.
+- Debug with logs in `storage/logs/app.log`.
+- Ensure your DB schema matches `sql/schema.sql`.
+
+---
 
 ## Quick start
 1) Copy `.env.example` to `.env` and set:
@@ -82,7 +227,12 @@ php -S 127.0.0.1:8765 -t public
 npm install
 npm run build:css   # or npm run watch:css
 ```
-5) Open `http://127.0.0.1:8765/index.php?page=login`.
+7) (Optional) Run automated tests (requires dev dependencies):
+```
+composer install --dev
+composer test
+```
+8) Open `http://127.0.0.1:8765/index.php?page=login`.
 
 For API-only usage (headless), point your frontend or API client at `http://127.0.0.1:8765/api.php` with the paths listed below.
 
@@ -140,6 +290,21 @@ For API-only usage (headless), point your frontend or API client at `http://127.
 - Dashboard: card-based layout with charts, quick stats
 - Profile: two-column card (avatar/status + editable details)
 - Sidebar: icon nav; profile avatar + logout live in the top bar
+ - Tenancy contracts: split layout with form on the left and PDF-style preview on the right (`?page=tenancy-contracts`).
+
+## Tenancy contract PDF
+- Template: upload the official tenancy form as a flattened PDF to `storage/templates/tenancy-contract-template.pdf` (A4 size).
+- Preview: `public/views/tenancy-contracts.php` renders a fixed-size (800x1130px) preview with that PDF exported as an image (`public/assets/img/tenancy-contract-template_Page1.png`), and absolutely positioned overlay fields.
+- Mapping: coordinates in the preview are derived from `SetXY` positions in `src/controllers/TenancyContractController.php` and should be adjusted there first; the preview mirrors those values so the PDF is the single source of truth. The comment block above `SetXY` in that controller documents the A4 page assumption and that the preview scales an 800x1130px container from these millimeter coordinates.
+- JS: `public/assets/js/tenancyContracts.js` keeps the preview in sync with the left-side form, formats dates as `dd-mm-yyyy`, and builds the annual rent string in the format `AED 120000 /-- (One Hundred Twenty Thousand Dirham Only)`.
+- Download: the "Download filled PDF" button posts the form to `/api.php/tenancy-contracts/pdf`, where `TenancyContractController::downloadPdf` fills the PDF template using the form data and returns a browser-viewable PDF.
+
+## NOC / Leasing form PDF
+- Page: `?page=noc-leasing` shows a similar two-column layout: form on the left, PDF-style preview on the right.
+- Template: place your flattened NOC/leasing template PDF at `storage/templates/noc-template.pdf` (A4 size). Export the same design as an image to `public/assets/img/noc-template_Page1.png` for the on-screen preview.
+- Preview: `public/views/noc-leasing.php` renders an 800x1130px preview using that image, with overlay fields whose positions mirror `SetXY` coordinates in `src/controllers/NocLeasingController.php`. Adjust the controller coordinates first, then tweak the preview to match.
+- JS: `public/assets/js/nocLeasing.js` keeps the preview in sync with the form, formats dates as `dd-mm-yyyy`, and builds the same combined annual rent string (`AED 120000 /-- (One Hundred Twenty Thousand Dirham Only)`) used when filling the PDF.
+- Download: the "Download NOC PDF" button posts to `/api.php/noc-leasing/pdf`, where `NocLeasingController::downloadPdf` fills the NOC template with the form data and streams it back to the browser.
 
 ## Notes
 - Keep secrets out of version control; use `.env.example` as your template.
@@ -159,6 +324,13 @@ For API-only usage (headless), point your frontend or API client at `http://127.
 - Login/forgot/reset screens restyled with gradient background and pill inputs/buttons; reset now uses a 6-digit code UI.
 - Password reset flow: `/auth/forgot` emails a 6-digit code + link via SMTP; `/auth/reset` consumes the code + new password. Tokens expire after 1 hour.
 - Tailwind rebuild recommended after UI tweaks: `npm run build:css` (or `npm run watch:css`).
+- Removed dark mode support (CSS, JS toggles, Tailwind config, and tests).
+- Centralized "Hard Reload" handling in `public/assets/js/reload.js` and global modal in `public/views/layout.php`.
+- CSRF validation now applies to cookie-authenticated requests; file downloads no longer accept query-string tokens.
+- Debug request logging is still enabled for testing; disable before production.
+- Leads API supports `created_from` and `created_to` query filters for date ranges.
+- Dashboard and Reports leads charts paginate all leads, support week/month/year/custom ranges, and show separate lines for `property_for`.
+- Leads table auto-refresh removed; the list now refreshes on user actions only.
 
 
 ## Data model highlights / required columns

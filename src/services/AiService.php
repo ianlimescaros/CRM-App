@@ -1,4 +1,5 @@
 <?php
+// Service wrapper for LLM API calls.
 
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../services/Logger.php';

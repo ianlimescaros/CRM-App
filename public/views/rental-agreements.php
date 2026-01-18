@@ -1,3 +1,5 @@
+<!-- View template for the rental agreements page. -->
+
 <section data-page="rental-agreements" class="max-w-4xl mx-auto">
     <div class="bg-white border border-border rounded-card shadow-card p-6 text-center space-y-4">
         <div class="inline-flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-blue-500 text-white shadow">??</div>

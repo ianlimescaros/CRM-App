@@ -1,3 +1,5 @@
+<!-- View template for the clients and landlords page. -->
+
 <section data-page="contacts">
     <div class="flex justify-between items-center mb-4">
         <h1 class="text-2xl font-semibold">Clients/Landlords</h1>
@@ -5,6 +7,9 @@
             <label class="sr-only" for="contactSearch">Search clients</label>
             <input id="contactSearch" name="contactSearch" placeholder="Search name/email" autocomplete="off" class="border border-border px-3 py-2 rounded text-sm focus:outline-none focus:ring-2 focus:ring-accent/30">
             <button id="contactAddBtn" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">Add Client/Landlord</button>
+            <button onclick="hardReload()" class="px-4 py-2 bg-red-600 text-white rounded-full shadow-sm hover:bg-red-700 transition text-sm">
+                Hard Reload
+            </button>
         </div>
     </div>
     <div class="bg-white border border-border rounded-card shadow-card overflow-x-auto">
@@ -23,7 +28,7 @@
     </div>
     <div id="contactPagination" class="mt-2"></div>
 
-    <div id="contactFormContainer" class="fixed inset-0 bg-black/50 hidden z-40 flex items-start justify-center overflow-y-auto p-4">
+    <div id="contactFormContainer" class="fixed inset-0 bg-black/50 z-40 items-start justify-center overflow-y-auto p-4 flex hidden">
         <div class="bg-gradient-to-r from-blue-500 via-purple-500 to-emerald-500 p-[1px] rounded-card shadow-2xl w-full max-w-3xl mt-10">
             <div class="bg-white rounded-card p-5">
         <h2 class="text-xl font-semibold mb-2" id="contactFormTitle">New Client</h2>
@@ -66,7 +71,7 @@
         </div>
     </div>
 
-    <div id="contactFilesModal" class="fixed inset-0 bg-black/50 hidden z-40 overflow-y-auto p-4 flex items-center justify-center">
+    <div id="contactFilesModal" class="fixed inset-0 bg-black/50 z-40 overflow-y-auto p-4 items-center justify-center flex hidden">
         <div class="bg-gradient-to-r from-blue-500 via-purple-500 to-emerald-500 p-[1px] rounded-card shadow-2xl w-full max-w-xl">
             <div class="bg-white rounded-card p-5 max-h-[90vh] overflow-hidden flex flex-col">
                 <div class="flex items-start justify-between mb-3">
@@ -86,4 +91,5 @@
             </div>
         </div>
     </div>
+
 </section>

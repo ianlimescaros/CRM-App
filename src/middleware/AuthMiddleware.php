@@ -1,4 +1,5 @@
 <?php
+// Auth middleware for validating tokens on API requests.
 
 require_once __DIR__ . '/../services/AuthService.php';
 require_once __DIR__ . '/../services/Response.php';
@@ -31,12 +32,19 @@ class AuthMiddleware
             }
         }
 
+        // Standard Bearer token from Authorization header
         if (function_exists('str_starts_with') && str_starts_with($header, 'Bearer ')) {
             return substr($header, 7);
         }
         if (strpos($header, 'Bearer ') === 0) {
             return substr($header, 7);
         }
+
+        // Fallback to cookie-based token (the JS sets `auth_token` cookie for page auth)
+        if (!empty($_COOKIE['auth_token'])) {
+            return trim((string)$_COOKIE['auth_token']);
+        }
+
         return null;
     }
 }

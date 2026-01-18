@@ -424,9 +424,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const fd = new FormData();
                 fd.append('file', file);
                 const token = apiClient.getToken();
+                const csrf = typeof getCookie === 'function' ? getCookie('csrf_token') : null;
+                const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+                if (csrf) {
+                    headers['X-CSRF-Token'] = csrf;
+                }
                 const res = await fetch(`/api.php/clients/${currentId}/files`, {
                     method: 'POST',
-                    headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+                    headers,
                     body: fd,
                 });
                 if (!res.ok) {
@@ -474,12 +479,18 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
             // delete
             try {
+                const headers = { 'Content-Type': 'application/json' };
+                const token = apiClient.getToken();
+                if (token) {
+                    headers['Authorization'] = `Bearer ${token}`;
+                }
+                const csrf = typeof getCookie === 'function' ? getCookie('csrf_token') : null;
+                if (csrf) {
+                    headers['X-CSRF-Token'] = csrf;
+                }
                 await fetch(`/api.php/clients/${currentId}/files`, {
                     method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        ...(apiClient.getToken() ? { 'Authorization': `Bearer ${apiClient.getToken()}` } : {})
-                    },
+                    headers,
                     body: JSON.stringify({ file_id: Number(id) })
                 }).then(async res => {
                     if (!res.ok) {

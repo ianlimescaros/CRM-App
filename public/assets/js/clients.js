@@ -1,8 +1,14 @@
+// Clients list UI and CRUD actions.
+
 function initClients() {
     const tableBody = document.getElementById('contactsTableBody');
     const addBtn = document.getElementById('contactAddBtn');
     const formContainer = document.getElementById('contactFormContainer');
     const form = document.getElementById('contactForm');
+    // Accessibility: label forms and tables
+    if (form && !form.getAttribute('aria-label')) form.setAttribute('aria-label', 'Client form');
+    const contactsTable = tableBody ? tableBody.closest('table') : null;
+    if (contactsTable && !contactsTable.getAttribute('role')) contactsTable.setAttribute('role', 'table');
     const cancelBtn = document.getElementById('contactFormCancel');
     const searchInput = document.getElementById('contactSearch');
     const formError = document.getElementById('contactFormError');
@@ -15,7 +21,18 @@ function initClients() {
     if (searchInput && clientSearch) searchInput.value = clientSearch;
     const clientPagination = { page: 1, per_page: 20, total: 0, sort: 'created_at', direction: 'DESC' };
 
+    // Debounced search to avoid excessive API calls
+    let searchTimeout;
+    function debouncedSearch() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            clientPagination.page = 1; // reset to first page
+            loadClients();
+        }, 300); // wait 300ms after user stops typing
+    }
+
     async function loadClients() {
+        ui.showListSkeleton(tableBody, Math.min(8, clientPagination.per_page || 8), 5);
         try {
             const res = await apiClient.listClients({
                 page: clientPagination.page,
@@ -37,20 +54,45 @@ function initClients() {
                 clientPagination.page = res.meta.page || clientPagination.page;
             }
             if (!list.length) {
-                tableBody.innerHTML = `<tr><td class="px-3 py-4 text-center text-gray-500" colspan="5">No clients found.</td></tr>`;
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="5">
+                            <div class="py-8 text-center text-gray-600">
+                                <div class="mx-auto w-36 h-24">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 48" class="mx-auto" fill="none" stroke="currentColor" stroke-width="1">
+                                        <rect x="2" y="8" width="60" height="32" rx="6" stroke-opacity="0.12"></rect>
+                                        <path d="M18 22h28" stroke-opacity="0.12"></path>
+                                    </svg>
+                                </div>
+                                <div class="mt-4 font-semibold">No clients yet</div>
+                                <div class="text-sm mt-2 text-gray-500">Add a client to start building your contacts.</div>
+                                <div class="mt-4">
+                                    <button id="addClientAction" class="px-3 py-1 bg-indigo-600 text-white rounded">Add client</button>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                const addAct = document.getElementById('addClientAction');
+                if (addAct) addAct.addEventListener('click', () => addBtn?.click());
+                ui.hideListSkeleton(tableBody);
                 return;
             }
             tableBody.innerHTML = list.map(clientRow).join('');
+            // denser list
+            if (tableBody && tableBody.closest('table')) tableBody.closest('table').classList.add('list-dense');
             attachActions();
             renderClientPagination();
+            ui.hideListSkeleton(tableBody);
         } catch (err) {
+            ui.hideListSkeleton(tableBody);
             ui.showToast('Failed to load clients', 'error');
         }
     }
 
     function clientRow(client) {
         return `
-            <tr data-id="${client.id}" class="border-b last:border-b-0 even:bg-gray-50 hover:bg-gray-100">
+            <tr data-id="${client.id}" class="transition-smooth hover-elevate list-dense">
                 <td class="px-3 py-2">${escapeHtml(client.full_name)}</td>
                 <td class="px-3 py-2">${client.email ? escapeHtml(client.email) : ''}</td>
                 <td class="px-3 py-2">${client.phone ? escapeHtml(client.phone) : ''}</td>
@@ -157,7 +199,7 @@ function initClients() {
     searchInput?.addEventListener('input', (e) => {
         clientSearch = e.target.value || '';
         saveClientSearch(clientSearch);
-        loadClients();
+        debouncedSearch(); // Use debounced version instead of immediate call
     });
 
     // Keyboard shortcuts: Esc closes form, "n" or "/" opens new (when not typing)
@@ -252,10 +294,9 @@ function initClients() {
                 filesList.innerHTML = '<div class="text-gray-500 text-sm">No documents uploaded.</div>';
                 return;
             }
-            const tokenParam = apiClient.getToken() ? `?token=${encodeURIComponent(apiClient.getToken())}` : '';
             filesList.innerHTML = files.map(f => {
                 const size = f.size_label ? ` (${escapeHtml(f.size_label)})` : '';
-                const downloadUrl = `/api.php/clients/${clientId}/files/${f.id}/download${tokenParam}`;
+                const downloadUrl = `/api.php/clients/${clientId}/files/${f.id}/download`;
                 return `<div class="flex items-center justify-between border border-border rounded px-3 py-2">
                     <div class="flex-1">
                         <div class="font-medium">${escapeHtml(f.name || 'Document')}</div>
@@ -274,6 +315,10 @@ function initClients() {
         const headers = {};
         if (token) {
             headers['Authorization'] = `Bearer ${token}`;
+        }
+        const csrf = typeof getCookie === 'function' ? getCookie('csrf_token') : null;
+        if (csrf) {
+            headers['X-CSRF-Token'] = csrf;
         }
         const fd = new FormData();
         fd.append('file', file);

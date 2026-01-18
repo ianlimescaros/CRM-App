@@ -1,3 +1,5 @@
+<!-- View template for the profile page. -->
+
 <section data-page="profile" class="relative">
     <div class="absolute inset-0 bg-gradient-to-br from-slate-50 via-white to-blue-50"></div>
     <div class="relative max-w-6xl mx-auto px-4 py-6">

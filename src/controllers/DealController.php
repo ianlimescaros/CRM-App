@@ -1,9 +1,9 @@
 <?php
+// Controller for deals and related file handling.
 
 require_once __DIR__ . '/../middleware/AuthMiddleware.php';
 require_once __DIR__ . '/../services/Response.php';
 require_once __DIR__ . '/../services/Validator.php';
-require_once __DIR__ . '/../services/AuthService.php';
 require_once __DIR__ . '/../models/Deal.php';
 require_once __DIR__ . '/../models/Lead.php';
 require_once __DIR__ . '/../models/Client.php';
@@ -12,7 +12,9 @@ require_once __DIR__ . '/BaseController.php';
 
 class DealController extends BaseController
 {
+    /** @var array<int|string, string> */
     private array $stages = ['ongoing', 'pending'];
+    /** @var array<int|string, string> */
     private array $currencies = ['AED', 'USD'];
 
     public function index(): void
@@ -50,11 +52,11 @@ class DealController extends BaseController
         $user = AuthMiddleware::require();
         $input = $this->normalizeClientLink($this->getJsonInput());
 
-        $errors = Validator::required($input, ['title']);
-        $currency = strtoupper(trim($input['currency'] ?? ''));
-        $errors = array_merge($errors, Validator::inEnum($currency, $this->currencies, 'currency'));
+        $errors = (array) Validator::required($input, ['title']);
+        $currency = strtoupper(trim((string)($input['currency'] ?? '')));
+        $errors = array_merge($errors, (array)Validator::inEnum((string)$currency, $this->currencies, 'currency'));
         $stage = trim((string)($input['stage'] ?? '')) ?: 'ongoing';
-        $errors = array_merge($errors, Validator::inEnum($stage, $this->stages, 'stage'));
+        $errors = array_merge($errors, (array)Validator::inEnum((string)$stage, $this->stages, 'stage'));
         $amount = $this->normalizeAmount($input['amount'] ?? null);
         if ($amount === false) {
             $errors['amount'] = 'Amount must be a valid number';
@@ -88,12 +90,12 @@ class DealController extends BaseController
         }
 
         $input = $this->normalizeClientLink($this->getJsonInput());
-        $payload = array_merge($existing, $input);
+        $payload = array_merge((array)$existing, (array)$input);
         $stage = trim((string)($payload['stage'] ?? '')) ?: 'ongoing';
         $currency = strtoupper(trim($input['currency'] ?? ($existing['currency'] ?? '')));
-        $errors = Validator::inEnum($stage, $this->stages, 'stage');
-        $errors = array_merge($errors, Validator::inEnum($currency, $this->currencies, 'currency'));
-        $errors = array_merge($errors, Validator::required($payload, ['title']));
+        $errors = (array)Validator::inEnum($stage, $this->stages, 'stage');
+        $errors = array_merge($errors, (array)Validator::inEnum($currency, $this->currencies, 'currency'));
+        $errors = array_merge($errors, (array)Validator::required($payload, ['title']));
         $amount = $this->normalizeAmount($payload['amount'] ?? null);
         if ($amount === false) {
             $errors['amount'] = 'Amount must be a valid number';
@@ -127,18 +129,7 @@ class DealController extends BaseController
 
     public function files(int $id): void
     {
-        // Allow token via query on GET
-        $user = null;
-        if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET') {
-            $queryToken = isset($_GET['token']) ? trim((string)$_GET['token']) : '';
-            if ($queryToken !== '') {
-                $auth = new AuthService();
-                $user = $auth->requireAuth($queryToken);
-            }
-        }
-        if (!$user) {
-            $user = AuthMiddleware::require();
-        }
+        $user = AuthMiddleware::require();
         $deal = Deal::find((int)$user['id'], $id);
         if (!$deal) {
             Response::error('Deal not found', 404);
@@ -170,9 +161,12 @@ class DealController extends BaseController
                 $tmpPath = $file['tmp_name'];
                 $mime = null;
                 if ($tmpPath && is_uploaded_file($tmpPath) && function_exists('finfo_open')) {
-                    $finfo = @finfo_open(FILEINFO_MIME_TYPE);
+                    $finfo = finfo_open(FILEINFO_MIME_TYPE);
                     if ($finfo) {
-                        $mime = @finfo_file($finfo, $tmpPath);
+                        $m = finfo_file($finfo, $tmpPath);
+                        if ($m !== false) {
+                            $mime = $m;
+                        }
                         finfo_close($finfo);
                     }
                 }
@@ -194,6 +188,7 @@ class DealController extends BaseController
                 if (!move_uploaded_file($tmpPath, $targetPath)) {
                     Response::error('Failed to save file', 500);
                 }
+                @chmod($targetPath, 0644);
                 $relUrl = null;
                 $sizeLabel = $this->formatSize((int)filesize($targetPath));
                 $created = DealFile::create((int)$user['id'], $id, $original, $relUrl, $sizeLabel, $targetPath);
@@ -203,15 +198,15 @@ class DealController extends BaseController
 
             // JSON metadata-only
             $input = $this->getJsonInput();
-            $name = trim($input['name'] ?? '');
+            $name = trim($this->asString($input['name'] ?? ''));
             if ($name === '') {
                 Response::error('Validation failed', 422, ['name' => 'File name is required.']);
             }
-            $url = isset($input['url']) ? trim((string)$input['url']) : null;
+            $url = isset($input['url']) ? trim($this->asString($input['url'])) : null;
             if ($url && !preg_match('#^https?://#i', $url)) {
                 $url = null;
             }
-            $sizeLabel = isset($input['size_label']) ? trim((string)$input['size_label']) : null;
+            $sizeLabel = isset($input['size_label']) ? trim($this->asString($input['size_label'])) : null;
             $created = DealFile::create((int)$user['id'], $id, $name, $url, $sizeLabel);
             unset($created['disk_path']);
             Response::success(['file' => $created], 201);
@@ -229,7 +224,9 @@ class DealController extends BaseController
                 Response::error('File not found', 404);
             }
             if (!empty($file['disk_path']) && file_exists($file['disk_path'])) {
-                @unlink($file['disk_path']);
+                if (!unlink($file['disk_path'])) {
+                    error_log('Failed to delete file: ' . $file['disk_path']);
+                }
             }
             DealFile::deleteFile((int)$user['id'], $id, $fileId);
             Response::success(['message' => 'File deleted']);
@@ -241,15 +238,7 @@ class DealController extends BaseController
 
     public function downloadFile(int $id, int $fileId): void
     {
-        $user = null;
-        $queryToken = isset($_GET['token']) ? trim((string)$_GET['token']) : '';
-        if ($queryToken !== '') {
-            $auth = new AuthService();
-            $user = $auth->requireAuth($queryToken);
-        }
-        if (!$user) {
-            $user = AuthMiddleware::require();
-        }
+        $user = AuthMiddleware::require();
         $deal = Deal::find((int)$user['id'], $id);
         if (!$deal) {
             Response::error('Deal not found', 404);
@@ -259,20 +248,29 @@ class DealController extends BaseController
             Response::error('File not found', 404);
         }
 
-        $path = $file['disk_path'];
+        $path = (string)($file['disk_path'] ?? '');
         $filename = $file['name'] ?? basename($path);
         $mime = 'application/octet-stream';
         if (function_exists('mime_content_type')) {
             $mime = mime_content_type($path) ?: $mime;
         }
 
+        // Sanitize filename to avoid header injection and support UTF-8
+        $safeName = basename($filename);
+        $safeName = preg_replace('/[\r\n\"]+/', '_', $safeName);
+
         header('Content-Type: ' . $mime);
         header('Content-Length: ' . filesize($path));
-        header('Content-Disposition: attachment; filename="' . addslashes($filename) . '"');
+        header('Content-Disposition: attachment; filename="' . $safeName . '"; filename*=UTF-8\'\'' . rawurlencode((string)$safeName));
         readfile($path);
         exit;
     }
 
+    /**
+     * @param array<string,mixed> $user
+     * @param array<string,mixed> $data
+     * @return void
+     */
     private function assertLinkOwnership(array $user, array $data): void
     {
         if (!empty($data['lead_id'])) {
@@ -289,6 +287,10 @@ class DealController extends BaseController
         }
     }
 
+    /**
+     * @param array<string,mixed> $data
+     * @return array<string,mixed>
+     */
     private function normalizeClientLink(array $data): array
     {
         if (isset($data['contact_id']) && empty($data['client_id'])) {
@@ -309,7 +311,7 @@ class DealController extends BaseController
         return round($size, 1) . $units[$i];
     }
 
-    private function normalizeAmount($value)
+    private function normalizeAmount(mixed $value): int|float|bool
     {
         if ($value === null || $value === '') {
             return 0;

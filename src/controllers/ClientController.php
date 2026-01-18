@@ -1,9 +1,9 @@
 <?php
+// Controller for client CRUD, notes, files, and activity.
 
 require_once __DIR__ . '/../middleware/AuthMiddleware.php';
 require_once __DIR__ . '/../services/Response.php';
 require_once __DIR__ . '/../services/Validator.php';
-require_once __DIR__ . '/../services/AuthService.php';
 require_once __DIR__ . '/../models/Client.php';
 require_once __DIR__ . '/../models/Lead.php';
 require_once __DIR__ . '/../models/Deal.php';
@@ -49,15 +49,15 @@ class ClientController extends BaseController
         $user = AuthMiddleware::require();
         $input = $this->getJsonInput();
 
-        $errors = Validator::required($input, ['full_name']);
+        $errors = (array) Validator::required($input, ['full_name']);
         if (!empty($input['email'])) {
-            $errors = array_merge($errors, Validator::email($input['email']));
+            $errors = array_merge($errors, (array)Validator::email($this->asString($input['email'] ?? '')));
         }
         if ($errors) {
             Response::error('Validation failed', 422, $errors);
         }
 
-        if (!empty($input['email']) && Client::findByEmail((int)$user['id'], $input['email'])) {
+        if (!empty($input['email']) && Client::findByEmail((int)$user['id'], (string)$input['email'])) {
             Response::error('Validation failed', 422, ['email' => 'Email already exists.']);
         }
 
@@ -75,16 +75,16 @@ class ClientController extends BaseController
         }
 
         $input = $this->getJsonInput();
-        $errors = Validator::required(array_merge($existing, $input), ['full_name']);
+        $errors = (array) Validator::required(array_merge((array)$existing, (array)$input), ['full_name']);
         if (!empty($input['email'])) {
-            $errors = array_merge($errors, Validator::email($input['email']));
+            $errors = array_merge($errors, (array)Validator::email($this->asString($input['email'] ?? '')));
         }
         if ($errors) {
             Response::error('Validation failed', 422, $errors);
         }
 
         if (!empty($input['email']) && $input['email'] !== ($existing['email'] ?? null)) {
-            $dupe = Client::findByEmail((int)$user['id'], $input['email']);
+            $dupe = Client::findByEmail((int)$user['id'], $this->asString($input['email'] ?? ''));
             if ($dupe && (int)$dupe['id'] !== (int)$id) {
                 Response::error('Validation failed', 422, ['email' => 'Email already exists.']);
             }
@@ -158,18 +158,7 @@ class ClientController extends BaseController
 
     public function files(int $id): void
     {
-        // Allow token in query string for GET (for hosts stripping Authorization header)
-        $user = null;
-        if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET') {
-            $queryToken = isset($_GET['token']) ? trim((string)$_GET['token']) : '';
-            if ($queryToken !== '') {
-                $auth = new AuthService();
-                $user = $auth->requireAuth($queryToken);
-            }
-        }
-        if (!$user) {
-            $user = AuthMiddleware::require();
-        }
+        $user = AuthMiddleware::require();
         $client = Client::find((int)$user['id'], $id);
         if (!$client) {
             Response::error('Client not found', 404);
@@ -193,7 +182,7 @@ class ClientController extends BaseController
                 $original = trim($file['name'] ?? 'upload');
                 $ext = strtolower((string)pathinfo($original, PATHINFO_EXTENSION));
                 if ($file['size'] > $maxSize) {
-                    Response::error('Validation failed', 422, ['file' => 'File is too large (max 5MB).']);
+                    Response::error('Validation failed', 422, ['file' => 'File is too large (max 10MB).']);
                 }
                 if ($ext && !in_array($ext, $allowedExt, true)) {
                     Response::error('Validation failed', 422, ['file' => 'File type not allowed.']);
@@ -201,9 +190,12 @@ class ClientController extends BaseController
                 $tmpPath = $file['tmp_name'];
                 $mime = null;
                 if ($tmpPath && is_uploaded_file($tmpPath) && function_exists('finfo_open')) {
-                    $finfo = @finfo_open(FILEINFO_MIME_TYPE);
+                    $finfo = finfo_open(FILEINFO_MIME_TYPE);
                     if ($finfo) {
-                        $mime = @finfo_file($finfo, $tmpPath);
+                        $m = finfo_file($finfo, $tmpPath);
+                        if ($m !== false) {
+                            $mime = $m;
+                        }
                         finfo_close($finfo);
                     }
                 }
@@ -225,6 +217,7 @@ class ClientController extends BaseController
                 if (!move_uploaded_file($tmpPath, $targetPath)) {
                     Response::error('Failed to save file', 500);
                 }
+                @chmod($targetPath, 0644);
                 // Store on disk outside web root; do not expose a public URL directly.
                 $relUrl = null;
                 $sizeLabel = $this->formatSize((int)filesize($targetPath));
@@ -269,7 +262,9 @@ class ClientController extends BaseController
                 Response::error('File not found', 404);
             }
             if (!empty($file['disk_path']) && file_exists($file['disk_path'])) {
-                @unlink($file['disk_path']);
+                if (!unlink($file['disk_path'])) {
+                    error_log('Failed to delete file: ' . $file['disk_path']);
+                }
             }
             ClientFile::deleteFile((int)$user['id'], $id, $fileId);
             ClientActivity::create((int)$user['id'], $id, 'note', 'File deleted: ' . ($file['name'] ?? ''));
@@ -311,7 +306,7 @@ class ClientController extends BaseController
             Response::error('Client not found', 404);
         }
         $input = $this->getJsonInput();
-        $errors = Validator::required($input, ['title']);
+        $errors = (array) Validator::required($input, ['title']);
         if ($errors) {
             Response::error('Validation failed', 422, $errors);
         }
@@ -323,7 +318,8 @@ class ClientController extends BaseController
             'client_id' => $id,
         ]);
         $task = Task::find((int)$user['id'], $taskId);
-        ClientActivity::create((int)$user['id'], $id, 'task', 'Task created: ' . $task['title']);
+        $title = is_array($task) ? ($task['title'] ?? '') : '';
+        ClientActivity::create((int)$user['id'], $id, 'task', 'Task created: ' . $title);
         Response::success(['task' => $task], 201);
     }
 
@@ -335,7 +331,7 @@ class ClientController extends BaseController
             Response::error('Client not found', 404);
         }
         $input = $this->getJsonInput();
-        $errors = Validator::required($input, ['title', 'stage']);
+        $errors = (array) Validator::required($input, ['title', 'stage']);
         if ($errors) {
             Response::error('Validation failed', 422, $errors);
         }
@@ -348,7 +344,8 @@ class ClientController extends BaseController
             'lead_id' => $input['lead_id'] ?? null,
         ]);
         $deal = Deal::find((int)$user['id'], $dealId);
-        ClientActivity::create((int)$user['id'], $id, 'note', 'Deal created: ' . $deal['title']);
+        $dealTitle = is_array($deal) ? ($deal['title'] ?? '') : '';
+        ClientActivity::create((int)$user['id'], $id, 'note', 'Deal created: ' . $dealTitle);
         Response::success(['deal' => $deal], 201);
     }
 
@@ -365,16 +362,7 @@ class ClientController extends BaseController
 
     public function downloadFile(int $id, int $fileId): void
     {
-        // Allow token via query (?token=...) for direct download links (no headers)
-        $user = null;
-        $queryToken = isset($_GET['token']) ? trim((string)$_GET['token']) : '';
-        if ($queryToken !== '') {
-            $auth = new AuthService();
-            $user = $auth->requireAuth($queryToken);
-        }
-        if (!$user) {
-            $user = AuthMiddleware::require();
-        }
+        $user = AuthMiddleware::require();
         $client = Client::find((int)$user['id'], $id);
         if (!$client) {
             Response::error('Client not found', 404);
@@ -384,16 +372,20 @@ class ClientController extends BaseController
             Response::error('File not found', 404);
         }
 
-        $path = $file['disk_path'];
+        $path = (string)($file['disk_path'] ?? '');
         $filename = $file['name'] ?? basename($path);
         $mime = 'application/octet-stream';
         if (function_exists('mime_content_type')) {
             $mime = mime_content_type($path) ?: $mime;
         }
 
+        // Sanitize filename to avoid header injection and support UTF-8
+        $safeName = basename($filename);
+        $safeName = preg_replace('/[\r\n\"]+/', '_', $safeName);
+
         header('Content-Type: ' . $mime);
         header('Content-Length: ' . filesize($path));
-        header('Content-Disposition: attachment; filename="' . addslashes($filename) . '"');
+        header('Content-Disposition: attachment; filename="' . $safeName . '"; filename*=UTF-8\'\'' . rawurlencode((string)$safeName));
         readfile($path);
         exit;
     }

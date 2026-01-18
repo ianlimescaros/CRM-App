@@ -1,13 +1,29 @@
 <?php
+// Lead data access and filters.
 
 require_once __DIR__ . '/../config/database.php';
 
 class Lead
 {
+    /**
+     * @param int $userId
+     * @param array<string,mixed> $filters
+     * @param array<string,mixed> $pagination
+     * @return array<int,array<string,mixed>>
+     */
     public static function all(int $userId, array $filters = [], array $pagination = []): array
     {
         $sql = 'SELECT * FROM leads WHERE user_id = :user_id';
         $params = [':user_id' => $userId];
+
+        $archivedFilter = $filters['archived'] ?? null;
+        if ($archivedFilter === 'all') {
+            // no archived filter
+        } elseif ($archivedFilter === 'archived' || $archivedFilter === '1' || $archivedFilter === 1 || $archivedFilter === true) {
+            $sql .= ' AND archived_at IS NOT NULL';
+        } else {
+            $sql .= ' AND archived_at IS NULL';
+        }
 
         if (!empty($filters['status'])) {
             $sql .= ' AND status = :status';
@@ -17,10 +33,29 @@ class Lead
             $sql .= ' AND source = :source';
             $params[':source'] = $filters['source'];
         }
+        if (!empty($filters['search'])) {
+            // simple multi-column search
+            $sql .= ' AND (name LIKE :q_name OR email LIKE :q_email OR phone LIKE :q_phone OR interested_property LIKE :q_property OR area LIKE :q_area OR notes LIKE :q_notes)';
+            $q = '%' . $filters['search'] . '%';
+            $params[':q_name'] = $q;
+            $params[':q_email'] = $q;
+            $params[':q_phone'] = $q;
+            $params[':q_property'] = $q;
+            $params[':q_area'] = $q;
+            $params[':q_notes'] = $q;
+        }
+        if (!empty($filters['created_from'])) {
+            $sql .= ' AND created_at >= :created_from';
+            $params[':created_from'] = $filters['created_from'] . ' 00:00:00';
+        }
+        if (!empty($filters['created_to'])) {
+            $sql .= ' AND created_at <= :created_to';
+            $params[':created_to'] = $filters['created_to'] . ' 23:59:59';
+        }
 
         $orderBy = $pagination['order_by'] ?? 'created_at';
         $orderDir = strtoupper($pagination['order_dir'] ?? 'DESC');
-        $allowedOrder = ['created_at', 'updated_at', 'name', 'status', 'source', 'property_for', 'payment_option', 'interested_property', 'area', 'budget', 'currency', 'last_contact_at', 'owner_id'];
+        $allowedOrder = ['created_at', 'updated_at', 'name', 'status', 'source', 'property_for', 'payment_option', 'interested_property', 'area', 'budget', 'currency', 'last_contact_at', 'owner_id', 'archived_at'];
         if (!in_array($orderBy, $allowedOrder, true)) {
             $orderBy = 'created_at';
         }
@@ -48,6 +83,14 @@ class Lead
     {
         $sql = 'SELECT COUNT(*) as cnt FROM leads WHERE user_id = :user_id';
         $params = [':user_id' => $userId];
+        $archivedFilter = $filters['archived'] ?? null;
+        if ($archivedFilter === 'all') {
+            // no archived filter
+        } elseif ($archivedFilter === 'archived' || $archivedFilter === '1' || $archivedFilter === 1 || $archivedFilter === true) {
+            $sql .= ' AND archived_at IS NOT NULL';
+        } else {
+            $sql .= ' AND archived_at IS NULL';
+        }
         if (!empty($filters['status'])) {
             $sql .= ' AND status = :status';
             $params[':status'] = $filters['status'];
@@ -55,6 +98,24 @@ class Lead
         if (!empty($filters['source'])) {
             $sql .= ' AND source = :source';
             $params[':source'] = $filters['source'];
+        }
+        if (!empty($filters['search'])) {
+            $sql .= ' AND (name LIKE :q_name OR email LIKE :q_email OR phone LIKE :q_phone OR interested_property LIKE :q_property OR area LIKE :q_area OR notes LIKE :q_notes)';
+            $q = '%' . $filters['search'] . '%';
+            $params[':q_name'] = $q;
+            $params[':q_email'] = $q;
+            $params[':q_phone'] = $q;
+            $params[':q_property'] = $q;
+            $params[':q_area'] = $q;
+            $params[':q_notes'] = $q;
+        }
+        if (!empty($filters['created_from'])) {
+            $sql .= ' AND created_at >= :created_from';
+            $params[':created_from'] = $filters['created_from'] . ' 00:00:00';
+        }
+        if (!empty($filters['created_to'])) {
+            $sql .= ' AND created_at <= :created_to';
+            $params[':created_to'] = $filters['created_to'] . ' 23:59:59';
         }
         $stmt = db()->prepare($sql);
         $stmt->execute($params);
@@ -93,7 +154,35 @@ class Lead
             ':notes' => $data['notes'] ?? null,
             ':last_contact_at' => $data['last_contact_at'] ?? null,
         ]);
-        return (int)db()->lastInsertId();
+
+        $id = (int)db()->lastInsertId();
+
+        // Lightweight create logging for debugging duplicate/ghost entries
+        $logDir = __DIR__ . '/../../storage/logs';
+        if (!is_dir($logDir)) {
+            if (!mkdir($logDir, 0777, true) && !is_dir($logDir)) {
+                error_log('Failed to create log dir: ' . $logDir);
+            }
+        }
+        $payload = $data;
+        // Truncate potentially large fields
+        $payloadJson = json_encode($payload, JSON_UNESCAPED_SLASHES);
+        if (strlen($payloadJson) > 1000) {
+            $payloadJson = substr($payloadJson, 0, 1000) . '...';
+        }
+        $logEntry = json_encode([
+            'time' => date('c'),
+            'ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown',
+            'action' => 'create_lead',
+            'user_id' => $userId,
+            'lead_id' => $id,
+            'payload' => $payloadJson,
+        ], JSON_UNESCAPED_SLASHES);
+        if (file_put_contents($logDir . '/creates.log', $logEntry . PHP_EOL, FILE_APPEND | LOCK_EX) === false) {
+            error_log('Failed to write creates.log in ' . $logDir);
+        }
+
+        return $id;
     }
 
     public static function updateLead(int $userId, int $id, array $data): bool
@@ -141,5 +230,43 @@ class Lead
         $stmt = db()->prepare("UPDATE leads SET status = ? WHERE user_id = ? AND id IN ($placeholders)");
         $stmt->execute($params);
         return $stmt->rowCount();
+    }
+
+    public static function bulkArchive(int $userId, array $ids): int
+    {
+        if (empty($ids)) {
+            return 0;
+        }
+        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+        $params = array_merge([$userId], $ids);
+        $stmt = db()->prepare("UPDATE leads SET archived_at = NOW() WHERE user_id = ? AND archived_at IS NULL AND id IN ($placeholders)");
+        $stmt->execute($params);
+        return $stmt->rowCount();
+    }
+
+    public static function bulkRestore(int $userId, array $ids): int
+    {
+        if (empty($ids)) {
+            return 0;
+        }
+        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+        $params = array_merge([$userId], $ids);
+        $stmt = db()->prepare("UPDATE leads SET archived_at = NULL WHERE user_id = ? AND archived_at IS NOT NULL AND id IN ($placeholders)");
+        $stmt->execute($params);
+        return $stmt->rowCount();
+    }
+
+    public static function archiveLead(int $userId, int $id): bool
+    {
+        $stmt = db()->prepare('UPDATE leads SET archived_at = NOW() WHERE id = :id AND user_id = :user_id AND archived_at IS NULL');
+        $stmt->execute([':id' => $id, ':user_id' => $userId]);
+        return $stmt->rowCount() > 0;
+    }
+
+    public static function restoreLead(int $userId, int $id): bool
+    {
+        $stmt = db()->prepare('UPDATE leads SET archived_at = NULL WHERE id = :id AND user_id = :user_id AND archived_at IS NOT NULL');
+        $stmt->execute([':id' => $id, ':user_id' => $userId]);
+        return $stmt->rowCount() > 0;
     }
 }

@@ -1,4 +1,5 @@
 <?php
+// File-backed rate limiting helpers.
 
 class RateLimiter
 {

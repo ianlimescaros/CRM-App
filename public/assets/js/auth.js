@@ -1,6 +1,11 @@
+// Login, register, and password reset UI logic.
+
 function initLogin() {
     const loginForm = document.getElementById('loginForm');
     const registerForm = document.getElementById('registerForm');
+    const registerPasswordInput = document.getElementById('registerPassword');
+    const registerPasswordHint = document.getElementById('registerPasswordHint');
+    const registerPasswordBar = document.getElementById('registerPasswordBar');
     const showRegister = document.getElementById('showRegister');
     const showForgot = document.getElementById('showForgot');
     const forgotForm = document.getElementById('forgotForm');
@@ -13,6 +18,7 @@ function initLogin() {
     const forgotSuccess = document.getElementById('forgotSuccess');
     const resetError = document.getElementById('resetError');
     const resetSuccess = document.getElementById('resetSuccess');
+
 
     if (showRegister) {
         showRegister.addEventListener('click', () => {
@@ -44,6 +50,41 @@ function initLogin() {
         });
     }
 
+    function updateRegisterPasswordHint() {
+        if (!registerPasswordInput || !registerPasswordHint || !registerPasswordBar) return;
+        const value = registerPasswordInput.value || '';
+        const missing = [];
+        const hasLength = value.length >= 8;
+        const hasUpper = /[A-Z]/.test(value);
+        const hasLower = /[a-z]/.test(value);
+        const hasNumber = /\d/.test(value);
+        if (!hasLength) missing.push('8+ chars');
+        if (!hasUpper) missing.push('uppercase');
+        if (!hasLower) missing.push('lowercase');
+        if (!hasNumber) missing.push('number');
+        const score = [hasLength, hasUpper, hasLower, hasNumber].filter(Boolean).length;
+        const widths = [20, 35, 55, 75, 100];
+        const width = widths[Math.min(score, widths.length - 1)];
+
+        if (!value) {
+            registerPasswordHint.textContent = 'At least 8 characters with uppercase, lowercase, and a number.';
+            registerPasswordBar.style.width = `${width}%`;
+            registerPasswordBar.className = 'h-2 bg-gray-300 transition-all rounded';
+            return;
+        }
+
+        if (missing.length === 0) {
+            registerPasswordHint.textContent = 'Password looks good.';
+            registerPasswordBar.style.width = '100%';
+            registerPasswordBar.className = 'h-2 bg-green-500 transition-all rounded';
+            return;
+        }
+
+        registerPasswordHint.textContent = `Needs: ${missing.join(', ')}`;
+        registerPasswordBar.style.width = `${width}%`;
+        registerPasswordBar.className = 'h-2 bg-red-500 transition-all rounded';
+    }
+
     [backToLoginFromForgot, backToLoginFromRegister, backToLoginFromReset].forEach(btn => {
         btn?.addEventListener('click', () => {
             ui.toggle(loginForm, true);
@@ -61,14 +102,24 @@ function initLogin() {
             const password = formData.get('password');
             const errorBox = document.getElementById('loginError');
             if (errorBox) errorBox.classList.add('hidden');
+
             try {
                 const res = await apiClient.login(email, password);
+
+                // keep existing behavior (store token for Authorization header usage)
                 apiClient.setToken(res.token);
+
                 if (res.user?.email) {
                     localStorage.setItem('crm_user_email', res.user.email);
                 }
-                ui.showToast('Logged in', 'success');
-                window.location = '/index.php?page=dashboard';
+
+                // Show confirmation modal instead of immediate redirect
+                const ok = await ui.confirmModal('Login successful. Proceed to the dashboard now?');
+                if (ok) {
+                    window.location = '/index.php?page=dashboard';
+                } else {
+                    ui.showToast('You are logged in. Click continue when ready.', 'success');
+                }
             } catch (err) {
                 ui.showToast(err.message || 'Login failed', 'error');
                 if (errorBox) {
@@ -165,12 +216,20 @@ function initLogin() {
         });
 
         const urlParams = new URLSearchParams(window.location.search);
-        const preset = urlParams.get('reset_token');
-        if (preset && tokenInput) {
-            tokenInput.value = preset;
-            resetEmailInput && (resetEmailInput.value = urlParams.get('email') || resetEmailInput.value || '');
-            if (/^\d{6}$/.test(preset) && codeInputs.length) {
-                preset.split('').forEach((digit, i) => {
+        const presetToken = urlParams.get('reset_token') || '';
+        const presetCode = urlParams.get('reset_code') || '';
+        const presetEmail = urlParams.get('email') || '';
+        const tokenToStore = presetToken || presetCode;
+
+        if ((presetToken || presetCode) && tokenInput) {
+            tokenInput.value = tokenToStore;
+            if (resetEmailInput && presetEmail) {
+                resetEmailInput.value = presetEmail;
+            }
+
+            const codeCandidate = /^\d{6}$/.test(presetCode) ? presetCode : (/^\d{6}$/.test(presetToken) ? presetToken : '');
+            if (codeCandidate && codeInputs.length) {
+                codeCandidate.split('').forEach((digit, i) => {
                     if (codeInputs[i]) codeInputs[i].value = digit;
                 });
                 codeInputs[0]?.focus();
@@ -186,20 +245,35 @@ function initLogin() {
     }
 
     if (registerForm) {
+        registerPasswordInput?.addEventListener('input', updateRegisterPasswordHint);
+        registerPasswordInput?.addEventListener('change', updateRegisterPasswordHint);
+        registerPasswordInput?.addEventListener('keyup', updateRegisterPasswordHint);
+        updateRegisterPasswordHint();
         registerForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const formData = new FormData(registerForm);
             const payload = Object.fromEntries(formData.entries());
             const errorBox = document.getElementById('registerError');
             if (errorBox) errorBox.classList.add('hidden');
+
             try {
                 const res = await apiClient.register(payload);
+
+                // keep existing behavior (store token for Authorization header usage)
                 apiClient.setToken(res.token);
+
                 if (res.user?.email) {
                     localStorage.setItem('crm_user_email', res.user.email);
                 }
-                ui.showToast('Account created', 'success');
-                window.location = '/index.php?page=dashboard';
+
+                // Show confirmation modal instead of immediate redirect
+                const ok = await ui.confirmModal('Account created. Proceed to the dashboard now?');
+                if (ok) {
+                    // Server sets session + csrf cookie during register, so just redirect
+                    window.location = '/index.php?page=dashboard';
+                } else {
+                    ui.showToast('Account created. You are logged in.', 'success');
+                }
             } catch (err) {
                 ui.showToast(err.message || 'Register failed', 'error');
                 if (errorBox) {
@@ -209,4 +283,19 @@ function initLogin() {
             }
         });
     }
+}
+
+// Optional: logout helper (call this from your logout button)
+async function logout() {
+    try {
+        await apiClient.logout();
+    } catch (err) {
+        console.warn('Server logout failed', err);
+    }
+    // Clear any client-side state and redirect
+    document.cookie = 'auth_token=; Max-Age=0; path=/; SameSite=Lax';
+    document.cookie = 'csrf_token=; Max-Age=0; path=/; SameSite=Lax';
+    apiClient.setToken('');
+    localStorage.removeItem('crm_user_email');
+    window.location = '/index.php?page=login';
 }

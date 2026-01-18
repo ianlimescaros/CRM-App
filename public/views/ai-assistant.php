@@ -1,3 +1,5 @@
+<!-- View template for the AI assistant page. -->
+
 <section data-page="ai-assistant" class="max-w-4xl mx-auto">
     <h1 class="text-2xl font-semibold mb-4">AI Assistant</h1>
 

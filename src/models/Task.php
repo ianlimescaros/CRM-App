@@ -1,9 +1,16 @@
 <?php
+// Task data access.
 
 require_once __DIR__ . '/../config/database.php';
 
 class Task
 {
+    /**
+     * @param int $userId
+     * @param array<string,mixed> $filters
+     * @param array<string,mixed> $pagination
+     * @return array<int,array<string,mixed>>
+     */
     private static function clientColumn(): string
     {
         static $col = null;

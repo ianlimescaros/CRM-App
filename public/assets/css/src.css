@@ -1,3 +1,5 @@
+/* Tailwind base plus custom styles. */
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

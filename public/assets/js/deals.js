@@ -1,3 +1,5 @@
+// Deals UI and file handling.
+
 function initDeals() {
     const tableBody = document.getElementById('dealsTableBody');
     const addBtn = document.getElementById('dealAddBtn');
@@ -313,10 +315,9 @@ function initDeals() {
                 filesList.innerHTML = '<div class="text-gray-500 text-sm">No documents uploaded.</div>';
                 return;
             }
-            const tokenParam = apiClient.getToken() ? `?token=${encodeURIComponent(apiClient.getToken())}` : '';
             filesList.innerHTML = files.map(f => {
                 const size = f.size_label ? ` - ${escapeHtml(f.size_label)}` : '';
-                const downloadUrl = `/api.php/deals/${dealId}/files/${f.id}/download${tokenParam}`;
+                const downloadUrl = `/api.php/deals/${dealId}/files/${f.id}/download`;
                 const actionLink = f.url
                     ? `<a class="text-indigo-600 hover:underline text-sm" href="${escapeHtml(f.url)}" target="_blank" rel="noopener">Open</a>`
                     : `<a class="text-indigo-600 hover:underline text-sm" href="${downloadUrl}">Download</a>`;

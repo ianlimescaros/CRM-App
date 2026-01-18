@@ -1,4 +1,5 @@
 <?php
+// Password reset token data access.
 
 require_once __DIR__ . '/../config/database.php';
 
@@ -22,6 +23,11 @@ class PasswordReset
         ]);
     }
 
+    /**
+     * @param string $email
+     * @param string $token
+     * @return array<string,mixed>|null
+     */
     public static function findValidByToken(string $email, string $token): ?array
     {
         $hash = hash('sha256', $token);
