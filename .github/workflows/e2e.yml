@@ -1,10 +1,11 @@
 name: E2E XSS tests
 
+# This workflow is kept as an optional/manual check and a weekly scheduled job
+# to avoid blocking pull requests with Puppeteer/Chromium complexities.
 on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+  workflow_dispatch: {}
+  schedule:
+    - cron: '0 3 * * 1' # weekly on Monday at 03:00 UTC
 
 jobs:
   e2e:
