@@ -333,7 +333,11 @@ function initDeals() {
                 </div>`;
             }).join('');
         } catch (err) {
-            filesList.innerHTML = `<div class="text-sm text-red-600">${err?.message || 'Failed to load documents'}</div>`;
+            filesList.innerHTML = '';
+            const errEl = document.createElement('div');
+            errEl.className = 'text-sm text-red-600';
+            errEl.textContent = err?.message || 'Failed to load documents';
+            filesList.appendChild(errEl);
         }
     }
 

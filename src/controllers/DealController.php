@@ -273,7 +273,7 @@ class DealController extends BaseController
         header('Content-Length: ' . filesize($real));
         header('Content-Disposition: attachment; filename="' . $safeName . '"; filename*=UTF-8\'\'' . rawurlencode((string)$safeName));
         readfile($real);
-        exit;"
+        exit;
     }
 
     /**

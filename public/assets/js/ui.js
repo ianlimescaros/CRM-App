@@ -47,16 +47,25 @@ function confirmModal(message) {
         box.className = 'bg-gradient-to-r from-blue-500 via-purple-500 to-emerald-500 p-[1px] rounded-2xl shadow-2xl w-full max-w-sm';
         const inner = document.createElement('div');
         inner.className = 'bg-white rounded-2xl p-5';
-        box.innerHTML = `
-            <div class="text-gray-800 font-semibold mb-2">Confirm</div>
-            <div class="text-gray-600 text-sm mb-4">${message}</div>
-            <div class="flex justify-end gap-2">
-                <button class="px-3 py-1 border rounded text-sm" data-action="cancel">Cancel</button>
-                <button class="px-3 py-1 bg-blue-600 text-white rounded text-sm" data-action="ok">Confirm</button>
-            </div>
-        `;
-        inner.innerHTML = box.innerHTML;
-        box.innerHTML = '';
+
+        // Title element
+        const titleEl = document.createElement('div');
+        titleEl.className = 'text-gray-800 font-semibold mb-2';
+        titleEl.textContent = 'Confirm';
+
+        // Message element (use textContent to avoid XSS)
+        const messageEl = document.createElement('div');
+        messageEl.className = 'text-gray-600 text-sm mb-4';
+        messageEl.textContent = message;
+
+        // Buttons container (static HTML)
+        const btns = document.createElement('div');
+        btns.className = 'flex justify-end gap-2';
+        btns.innerHTML = '<button class="px-3 py-1 border rounded text-sm" data-action="cancel">Cancel</button><button class="px-3 py-1 bg-blue-600 text-white rounded text-sm" data-action="ok">Confirm</button>';
+
+        inner.appendChild(titleEl);
+        inner.appendChild(messageEl);
+        inner.appendChild(btns);
         box.appendChild(inner);
         overlay.appendChild(box);
         document.body.appendChild(overlay);
@@ -79,16 +88,15 @@ function showSpinner(message = '') {
     const overlay = document.createElement('div');
     overlay.id = 'globalSpinner';
     overlay.className = 'fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4';
-    overlay.innerHTML = `
-        <div class="bg-white rounded-lg p-4 shadow-lg flex items-center gap-3">
-            <svg class="h-6 w-6 text-indigo-600 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
-            </svg>
-            <div class="text-sm text-gray-700">${message}</div>
-        </div>
-    `;
-    document.body.appendChild(overlay);
+    const content = document.createElement('div');
+        content.className = 'bg-white rounded-lg p-4 shadow-lg flex items-center gap-3';
+        content.innerHTML = '<svg class="h-6 w-6 text-indigo-600 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path></svg>';
+        const msg = document.createElement('div');
+        msg.className = 'text-sm text-gray-700';
+        msg.textContent = message;
+        content.appendChild(msg);
+        overlay.appendChild(content);
+        document.body.appendChild(overlay);
 }
 
 function hideSpinner() {
