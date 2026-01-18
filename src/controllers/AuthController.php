@@ -1,4 +1,5 @@
 <?php
+// Controller for login, register, logout, and reset.
 
 require_once __DIR__ . '/../services/AuthService.php';
 require_once __DIR__ . '/../middleware/AuthMiddleware.php';
@@ -21,8 +22,11 @@ class AuthController extends BaseController
         $result = $this->auth->register($input);
 
         if (isset($result['errors'])) {
-            Response::error('Validation failed', 422, $result['errors']);
+            Response::error('Validation failed', 422, (array)$result['errors']);
         }
+
+        // Create server-side cookie + session for browser clients
+        $this->setTokenCookieAndSession((string)$result['token'], (int)$result['user']['id']);
 
         Response::success(['user' => $result['user'], 'token' => $result['token']]);
     }
@@ -31,18 +35,21 @@ class AuthController extends BaseController
     {
         $input = $this->getJsonInput();
         $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
-        $emailKey = strtolower(trim($input['email'] ?? ''));
+        $emailKey = strtolower(trim($this->asString($input['email'] ?? '')));
 
         $this->throttleOrFail('login:ip:' . $ip, 5, 60);
         if ($emailKey !== '') {
             $this->throttleOrFail('login:email:' . $emailKey, 5, 60);
         }
 
-        $result = $this->auth->login($input['email'] ?? '', $input['password'] ?? '');
+        $result = $this->auth->login($this->asString($input['email'] ?? ''), $this->asString($input['password'] ?? ''));
 
         if (isset($result['errors'])) {
-            Response::error('Invalid credentials', 401, $result['errors']);
+            Response::error('Invalid credentials', 401, (array)$result['errors']);
         }
+
+        // Create server-side cookie + session for browser clients
+        $this->setTokenCookieAndSession((string)$result['token'], (int)$result['user']['id']);
 
         Response::success(['user' => $result['user'], 'token' => $result['token']]);
     }
@@ -51,6 +58,21 @@ class AuthController extends BaseController
     {
         $token = $this->getBearerToken();
         $this->auth->logout($token);
+        // Destroy any server-side session and clear cookies
+        if (session_status() !== PHP_SESSION_ACTIVE && !headers_sent()) {
+            session_start();
+        }
+        // Clear session data
+        $_SESSION = [];
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_destroy();
+        }
+        // Clear session cookie
+        setcookie('PHPSESSID', '', time() - 3600, '/');
+        // Clear auth and csrf cookies as well
+        setcookie('auth_token', '', time() - 3600, '/');
+        setcookie('csrf_token', '', time() - 3600, '/');
+
         Response::success(['message' => 'Logged out']);
     }
 
@@ -60,17 +82,65 @@ class AuthController extends BaseController
         Response::success(['user' => $user]);
     }
 
+    public function createSession(): void
+    {
+        $user = AuthMiddleware::require();
+
+        // Start or resume PHP session and store minimal user info
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            session_start();
+        }
+        // regenerate id for safety
+        session_regenerate_id(true);
+        $_SESSION['user_id'] = (int)$user['id'];
+
+        // create CSRF token for this session and expose a non-HttpOnly cookie so JS can read it
+        if (empty($_SESSION['csrf_token'])) {
+            $_SESSION['csrf_token'] = bin2hex(random_bytes(16));
+        }
+        $secure = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (($_SERVER['SERVER_PORT'] ?? '') == 443);
+        setcookie('csrf_token', $_SESSION['csrf_token'], ['path' => '/', 'samesite' => 'Lax', 'secure' => $secure]);
+
+        Response::success(['message' => 'Session created']);
+    }
+
+    private function setTokenCookieAndSession(string $token, int $userId): void
+    {
+        // Set auth_token cookie (HttpOnly) and create a server-side session with CSRF token
+        $ttl = 60 * 60 * 24 * 7; // 7 days
+        $secure = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (($_SERVER['SERVER_PORT'] ?? '') == 443);
+
+        // Auth cookie (HttpOnly)
+        setcookie('auth_token', $token, ['expires' => time() + $ttl, 'path' => '/', 'httponly' => true, 'samesite' => 'Lax', 'secure' => $secure]);
+
+        // Start session and set minimal user info
+        if (session_status() !== PHP_SESSION_ACTIVE && !headers_sent()) {
+            session_start();
+        }
+        if (function_exists('session_regenerate_id') && !headers_sent()) {
+            session_regenerate_id(true);
+        }
+        $_SESSION['user_id'] = $userId;
+
+        // CSRF token for browser requests (exposed as non-HttpOnly cookie so JS can read it)
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(16));
+        setcookie('csrf_token', $_SESSION['csrf_token'], ['path' => '/', 'samesite' => 'Lax', 'secure' => $secure]);
+    }
+
     public function updateProfile(): void
     {
         $user = AuthMiddleware::require();
         $input = $this->getJsonInput();
-        $name = trim($input['name'] ?? '');
-        $email = trim($input['email'] ?? '');
-        $newPass = $input['password'] ?? '';
+        $name = trim($this->asString($input['name'] ?? ''));
+        $email = trim($this->asString($input['email'] ?? ''));
+        $newPass = $this->asString($input['password'] ?? '');
 
-        $errors = Validator::required(['name' => $name, 'email' => $email], ['name', 'email']);
+        $errors = (array) Validator::required(['name' => $name, 'email' => $email], ['name', 'email']);
         if ($email !== '') {
             $errors = array_merge($errors, Validator::email($email));
+        }
+        if ($newPass !== '') {
+            $errors = array_merge($errors, Validator::passwordStrength($newPass, 'password', 8));
         }
         if ($errors) {
             Response::error('Validation failed', 422, $errors);
@@ -88,30 +158,30 @@ class AuthController extends BaseController
         }
 
         $fresh = User::findById((int)$user['id']);
-        Response::success(['user' => $this->auth->publicSanitizeUser($fresh)]);
+        Response::success(['user' => $this->auth->publicSanitizeUser((array)$fresh)]);
     }
 
     public function forgot(): void
     {
         $input = $this->getJsonInput();
-        $email = $input['email'] ?? '';
+        $email = strtolower(trim($this->asString($input['email'] ?? '')));
 
         $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
         $this->throttleOrFail('forgot:ip:' . $ip, 5, 300);
-        if ($email) {
-            $this->throttleOrFail('forgot:email:' . strtolower($email), 3, 300);
+        if ($email !== '') {
+            $this->throttleOrFail('forgot:email:' . $email, 3, 300);
         }
 
-        $this->auth->requestPasswordReset((string)$email);
+        $this->auth->requestPasswordReset($email);
         Response::success(['message' => 'If that email exists, a reset link has been sent.']);
     }
 
     public function reset(): void
     {
         $input = $this->getJsonInput();
-        $errors = Validator::required($input, ['email', 'token', 'password']);
+        $errors = (array) Validator::required($input, ['email', 'token', 'password']);
         if (!empty($input['email'])) {
-            $errors = array_merge($errors, Validator::email($input['email']));
+            $errors = array_merge($errors, Validator::email((string)$input['email']));
         }
         if ($errors) {
             Response::error('Validation failed', 422, $errors);
@@ -124,7 +194,7 @@ class AuthController extends BaseController
 
         $result = $this->auth->resetPassword((string)$input['token'], (string)$input['password'], $email);
         if (isset($result['errors'])) {
-            Response::error('Invalid or expired token', 422, $result['errors']);
+            Response::error('Invalid or expired token', 422, (array)$result['errors']);
         }
         Response::success(['message' => 'Password has been reset.']);
     }

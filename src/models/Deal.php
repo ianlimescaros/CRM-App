@@ -1,9 +1,16 @@
 <?php
+// Deal data access.
 
 require_once __DIR__ . '/../config/database.php';
 
 class Deal
 {
+    /**
+     * @param int $userId
+     * @param array<string,mixed>|null $filters
+     * @param array<string,mixed> $pagination
+     * @return array<int,array<string,mixed>>
+     */
     private static function clientColumn(): string
     {
         static $col = null;
@@ -82,6 +89,11 @@ class Deal
         return $stmt->fetchAll();
     }
 
+    /**
+     * @param int $userId
+     * @param array<string,mixed> $filters
+     * @return int
+     */
     public static function countAll(int $userId, array $filters = []): int
     {
         $clientCol = self::clientColumn();
@@ -105,6 +117,11 @@ class Deal
         return (int)($row['cnt'] ?? 0);
     }
 
+    /**
+     * @param int $userId
+     * @param int $id
+     * @return array<string,mixed>|null
+     */
     public static function find(int $userId, int $id): ?array
     {
         $clientCol = self::clientColumn();
@@ -117,6 +134,11 @@ class Deal
         return $deal ?: null;
     }
 
+    /**
+     * @param int $userId
+     * @param array<string,mixed> $data
+     * @return int
+     */
     public static function create(int $userId, array $data): int
     {
         $clientCol = self::clientColumn();

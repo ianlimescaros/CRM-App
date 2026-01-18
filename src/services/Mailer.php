@@ -1,4 +1,5 @@
 <?php
+// SMTP mailer for password reset emails.
 
 require_once __DIR__ . '/../config/config.php';
 
@@ -28,27 +29,39 @@ class Mailer
         $fromName = env('SMTP_FROM_NAME', 'CRM');
 
         $subject = 'Reset your CRM password';
-        $body = "Hello,\n\nWe received a request to reset your password.\n\n";
+        $bodyText = "Hello,\n\nWe received a request to reset your password.\n\n";
         if ($token !== null) {
-            $body .= "Reset code: {$token}\n\n";
+            $bodyText .= "Reset code: {$token}\n\n";
         }
-        $body .= "You can also click the link below to set a new password:\n{$resetUrl}\n\nIf you did not request this, you can ignore this email.\n";
+        $bodyText .= "You can also click the link below to set a new password:\n{$resetUrl}\n\nIf you did not request this, you can ignore this email.\n";
+
+        $safeUrl = htmlspecialchars($resetUrl, ENT_QUOTES, 'UTF-8');
+        $bodyHtml = '<p>Hello,</p><p>We received a request to reset your password.</p>';
+        if ($token !== null) {
+            $safeToken = htmlspecialchars((string)$token, ENT_QUOTES, 'UTF-8');
+            $bodyHtml .= "<p><strong>Reset code:</strong> {$safeToken}</p>";
+        }
+        $bodyHtml .= '<p>You can also click the link below to set a new password:</p>';
+        $bodyHtml .= "<p><a href=\"{$safeUrl}\">Reset your password</a></p>";
+        $bodyHtml .= '<p>If you did not request this, you can ignore this email.</p>';
 
         $mail = new PHPMailer(true);
         try {
             $mail->isSMTP();
-            $mail->Host = env('SMTP_HOST');
+            $mail->Host = (string)env('SMTP_HOST');
             $mail->Port = (int)env('SMTP_PORT', 587);
             $mail->SMTPAuth = true;
-            $mail->Username = env('SMTP_USER');
-            $mail->Password = env('SMTP_PASS');
+            $mail->Username = (string)env('SMTP_USER');
+            $mail->Password = (string)env('SMTP_PASS');
             $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
 
-            $mail->setFrom($from, $fromName);
+            $mail->setFrom((string)$from, (string)$fromName);
             $mail->addAddress($toEmail);
 
             $mail->Subject = $subject;
-            $mail->Body = $body;
+            $mail->isHTML(true);
+            $mail->Body = $bodyHtml;
+            $mail->AltBody = $bodyText;
 
             return $mail->send();
         } catch (Exception $e) {

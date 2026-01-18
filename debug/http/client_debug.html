@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Client Debug</title>
+<style>
+  body { font-family: monospace; margin: 20px; background: #f0f0f0; }
+  .section { background: white; padding: 15px; margin: 10px 0; border-radius: 5px; }
+  .success { color: green; }
+  .error { color: red; }
+  .warn { color: orange; }
+  pre { background: #f5f5f5; padding: 10px; border-radius: 3px; overflow-x: auto; max-height: 300px; }
+  button { padding: 8px 15px; margin: 5px; cursor: pointer; }
+</style>
+</head>
+<body>
+<h1>CRM Client Loading Debug</h1>
+
+<div class="section">
+  <h2>LocalStorage Check</h2>
+  <div id="storage"></div>
+  <button onclick="localStorage.clear(); location.reload();">Clear ALL LocalStorage</button>
+  <button onclick="clearClientSearch();">Clear Client Search Only</button>
+</div>
+
+<div class="section">
+  <h2>API Test</h2>
+  <button onclick="testAPI();">Test /api.php?page=clients</button>
+  <div id="apiResult"></div>
+</div>
+
+<div class="section">
+  <h2>Page Elements Check</h2>
+  <div id="elementsResult"></div>
+</div>
+
+<script>
+function clearClientSearch() {
+  localStorage.removeItem('crm_client_search');
+  localStorage.removeItem('crm_contact_search');
+  alert('Client search cleared. Reload the page.');
+}
+
+function checkStorage() {
+  const storage = document.getElementById('storage');
+  const crm_client_search = localStorage.getItem('crm_client_search');
+  const crm_contact_search = localStorage.getItem('crm_contact_search');
+  
+  storage.innerHTML = `
+    <pre>crm_client_search: ${JSON.stringify(crm_client_search)}
+crm_contact_search: ${JSON.stringify(crm_contact_search)}</pre>
+    ${crm_client_search ? '<div class="warn">⚠️ Search filter is active! This may filter results.</div>' : '<div class="success">✓ No search filter</div>'}
+  `;
+}
+
+async function testAPI() {
+  const result = document.getElementById('apiResult');
+  result.innerHTML = '<div>Loading...</div>';
+  
+  try {
+    const res = await fetch('/api.php?page=clients');
+    const data = await res.json();
+    
+    result.innerHTML = `
+      <div>Status: ${res.status}</div>
+      <pre>${JSON.stringify(data, null, 2)}</pre>
+      <div class="success">✓ API returned ${data.clients?.length || 0} clients</div>
+    `;
+  } catch (err) {
+    result.innerHTML = `<div class="error">✗ Error: ${err.message}</div>`;
+  }
+}
+
+function checkElements() {
+  const check = document.getElementById('elementsResult');
+  const tableBody = document.querySelector('#contactsTableBody');
+  const addBtn = document.querySelector('#contactAddBtn');
+  const formContainer = document.querySelector('#contactFormContainer');
+  
+  check.innerHTML = `
+    <div>contactsTableBody: ${tableBody ? '<span class="success">✓ FOUND</span>' : '<span class="error">✗ NOT FOUND</span>'}</div>
+    <div>contactAddBtn: ${addBtn ? '<span class="success">✓ FOUND</span>' : '<span class="error">✗ NOT FOUND</span>'}</div>
+    <div>contactFormContainer: ${formContainer ? '<span class="success">✓ FOUND</span>' : '<span class="error">✗ NOT FOUND</span>'}</div>
+  `;
+}
+
+window.onload = () => {
+  checkStorage();
+  checkElements();
+};
+</script>
+</body>
+</html>

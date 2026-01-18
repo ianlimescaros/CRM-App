@@ -1,4 +1,5 @@
 <?php
+// Client activity data access.
 
 require_once __DIR__ . '/../config/database.php';
 

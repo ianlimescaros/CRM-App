@@ -1,3 +1,5 @@
+<!-- View template for login, register, and reset. -->
+
 <section class="min-h-screen flex justify-center relative overflow-hidden bg-white" data-page="login">
     <img src="https://pagedone.io/asset/uploads/1702362010.png" alt="gradient background image" class="w-full h-full object-cover fixed inset-0">
     <div class="absolute inset-0 bg-white/70"></div>
@@ -8,7 +10,7 @@
                 <div id="loginError" class="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2 hidden"></div>
                 <div class="mb-6 text-center">
                     <h1 class="text-gray-900 font-bold text-3xl leading-10 mb-2">Welcome Back</h1>
-                    <p class="text-gray-500 text-base leading-6">Let’s get started</p>
+                    <p class="text-gray-500 text-base leading-6">Let's get started</p>
                 </div>
                 <label class="sr-only" for="loginEmail">Email</label>
                 <input id="loginEmail" type="email" name="email" autocomplete="email" class="w-full h-12 text-gray-900 placeholder:text-gray-400 text-lg rounded-full border-gray-300 border shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 px-4" placeholder="Email" required>
@@ -19,7 +21,7 @@
                 </div>
                 <button type="submit" class="w-full h-12 text-white text-base font-semibold rounded-full hover:bg-indigo-800 transition bg-indigo-600 shadow-sm">Login</button>
                 <div class="flex justify-center text-gray-900 text-base">
-                    Don’t have an account?
+                    Don't have an account?
                     <button type="button" id="showRegister" class="text-indigo-600 font-semibold pl-2 hover:text-indigo-700">Sign Up</button>
                 </div>
             </form>
@@ -35,6 +37,10 @@
                 <input id="registerEmail" type="email" name="email" autocomplete="email" class="w-full h-12 text-gray-900 placeholder:text-gray-400 text-lg rounded-full border-gray-300 border shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 px-4" placeholder="Email">
                 <label class="sr-only" for="registerPassword">Password</label>
                 <input id="registerPassword" type="password" name="password" autocomplete="new-password" class="w-full h-12 text-gray-900 placeholder:text-gray-400 text-lg rounded-full border-gray-300 border shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 px-4" placeholder="Password">
+                <div id="registerPasswordHint" class="text-xs text-gray-600">At least 8 characters with uppercase, lowercase, and a number.</div>
+                <div class="h-2 rounded bg-gray-200 overflow-hidden">
+                    <div id="registerPasswordBar" class="h-2 w-full bg-gray-300 transition-all rounded"></div>
+                </div>
                 <button type="submit" class="w-full h-12 text-white text-base font-semibold rounded-full hover:bg-emerald-700 transition bg-emerald-600 shadow-sm">Register</button>
                 <div class="flex justify-center text-base text-indigo-600">
                     <button type="button" id="backToLoginFromRegister" class="hover:text-indigo-700">Back to login</button>

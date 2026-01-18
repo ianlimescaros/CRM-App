@@ -1,11 +1,18 @@
+// Leads UI, filters, and archive actions.
+
 function initLeads() {
     const tableBody = document.getElementById('leadsTableBody');
     const addBtn = document.getElementById('leadAddBtn');
     const formContainer = document.getElementById('leadFormContainer');
     const form = document.getElementById('leadForm');
+    // Accessibility: label forms and tables for screen readers
+    if (form && !form.getAttribute('aria-label')) form.setAttribute('aria-label', 'Lead form');
+    const leadTable = tableBody ? tableBody.closest('table') : null;
+    if (leadTable && !leadTable.getAttribute('role')) leadTable.setAttribute('role', 'table');
     const cancelBtn = document.getElementById('leadFormCancel');
     const statusFilter = document.getElementById('leadStatusFilter');
     const sourceFilter = document.getElementById('leadSourceFilter');
+    const archiveFilter = document.getElementById('leadArchiveFilter');
     const filterBtn = document.getElementById('leadFilterBtn');
     const formError = document.getElementById('leadFormError');
     const leadTableWrap = document.getElementById('leadTableWrap');
@@ -26,14 +33,18 @@ function initLeads() {
     };
 
     let currentFilters = loadLeadFilters();
+    if (!currentFilters.archived) currentFilters.archived = 'active';
     let leadData = [];
     let viewMode = localStorage.getItem('crm_lead_view') || 'table';
     let selectedLeadIds = new Set();
 
     if (statusFilter && currentFilters.status) statusFilter.value = currentFilters.status;
     if (sourceFilter && currentFilters.source) sourceFilter.value = currentFilters.source;
+    if (archiveFilter && currentFilters.archived) archiveFilter.value = currentFilters.archived;
 
     async function loadLeads() {
+        // show skeleton while loading
+        ui.showListSkeleton(tableBody, Math.min(8, leadPagination.per_page || 8), 11);
         try {
             const res = await apiClient.listLeads({
                 ...currentFilters,
@@ -49,7 +60,9 @@ function initLeads() {
                 leadPagination.page = res.meta.page || leadPagination.page;
             }
             renderLeads();
+            ui.hideListSkeleton(tableBody);
         } catch (err) {
+            ui.hideListSkeleton(tableBody);
             ui.showToast('Failed to load leads', 'error');
         }
     }
@@ -64,8 +77,32 @@ function initLeads() {
         }
         ui.toggle(leadKanban, false);
         ui.toggle(leadTableWrap, true);
+        // make table denser for power users
+        if (tableBody && tableBody.closest('table')) tableBody.closest('table').classList.add('list-dense');
         if (!leadData.length) {
-            tableBody.innerHTML = `<tr><td class="px-3 py-4 text-center text-gray-500" colspan="10">No leads yet. Try adjusting filters or add a lead.</td></tr>`;
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="11">
+                        <div class="py-8 text-center text-gray-600">
+                            <div class="mx-auto w-36 h-24">
+                                <!-- simple illustration -->
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 48" class="mx-auto" fill="none" stroke="currentColor" stroke-width="1">
+                                    <rect x="2" y="8" width="60" height="32" rx="6" stroke-opacity="0.12"></rect>
+                                    <path d="M10 20h44" stroke-opacity="0.12"></path>
+                                    <circle cx="16" cy="26" r="3" fill="currentColor" style="opacity:.08"></circle>
+                                </svg>
+                            </div>
+                            <div class="mt-4 font-semibold">No leads yet</div>
+                            <div class="text-sm mt-2 text-gray-500">Add your first lead to get started.</div>
+                            <div class="mt-4">
+                                <button id="addLeadAction" class="px-3 py-1 bg-indigo-600 text-white rounded">Add a lead</button>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            `;
+            const addAct = document.getElementById('addLeadAction');
+            if (addAct) addAct.addEventListener('click', () => addBtn?.click());
             return;
         }
         tableBody.innerHTML = leadData.map(leadRow).join('');
@@ -132,6 +169,16 @@ function initLeads() {
         return leadStatusLabels[status] || status || '';
     }
 
+    function formatLeadStatusClass(status) {
+        switch ((status || '').toLowerCase()) {
+            case 'new': return 'status-badge status-new';
+            case 'contacted': return 'status-badge status-contacted';
+            case 'qualified': return 'status-badge status-qualified';
+            case 'not_qualified': return 'status-badge status-not_qualified';
+            default: return 'status-badge bg-gray-200 text-gray-800';
+        }
+    }
+
     function formatPropertyFor(value) {
         return value || '';
     }
@@ -145,12 +192,18 @@ function initLeads() {
     }
 
     function leadRow(lead) {
+        const archivedBadge = lead.archived_at ? '<span class="ml-2 text-xs px-2 py-1 rounded bg-gray-200 text-gray-700">Archived</span>' : '';
+        const archiveAction = lead.archived_at
+            ? '<button class="text-indigo-600 lead-restore">Restore</button>'
+            : '<button class="text-amber-600 lead-archive">Archive</button>';
+        const rowClass = lead.archived_at ? 'opacity-75' : '';
         return `
-            <tr data-id="${lead.id}" data-status="${lead.status || ''}" data-property="${lead.interested_property || ''}" data-property-for="${lead.property_for || ''}" data-area="${lead.area || ''}" data-last-contact="${lead.last_contact_at || ''}" class="border-b last:border-b-0 even:bg-gray-50 hover:bg-gray-100">
+            <tr data-id="${lead.id}" data-status="${lead.status || ''}" data-property="${lead.interested_property || ''}" data-property-for="${lead.property_for || ''}" data-area="${lead.area || ''}" data-last-contact="${lead.last_contact_at || ''}" class="transition-smooth hover-elevate ${rowClass}">
                 <td class="px-3 py-2"><input type="checkbox" class="lead-select h-4 w-4 border border-border rounded" data-id="${lead.id}" ${selectedLeadIds.has(String(lead.id)) ? 'checked' : ''}></td>
                 <td class="px-3 py-2">${escapeHtml(lead.name)}</td>
+                <td class="px-3 py-2">${lead.phone ? escapeHtml(String(lead.phone)) : '--'}</td>
                 <td class="px-3 py-2">
-                    <span class="inline-flex items-center px-2 py-1 rounded text-xs bg-blue-50 text-blue-700">${formatLeadStatus(lead.status)}</span>
+                    <span class="${formatLeadStatusClass(lead.status)}">${formatLeadStatus(lead.status)}</span>${archivedBadge}
                 </td>
                 <td class="px-3 py-2">${escapeHtml(lead.source || '')}</td>
                 <td class="px-3 py-2 text-xs text-gray-700">${lead.property_for ? escapeHtml(formatPropertyFor(lead.property_for)) : '--'}</td>
@@ -160,6 +213,7 @@ function initLeads() {
                 <td class="px-3 py-2">${formatBudget(lead)}</td>
                 <td class="px-3 py-2 space-x-2">
                     <button class="text-blue-600 lead-edit">Edit</button>
+                    ${archiveAction}
                     <button class="text-red-600 lead-delete">Delete</button>
                 </td>
             </tr>
@@ -184,6 +238,34 @@ function initLeads() {
                     loadLeads();
                 } catch (err) {
                     ui.showToast('Delete failed', 'error');
+                }
+            });
+        });
+        tableBody.querySelectorAll('.lead-archive').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                const id = e.target.closest('tr').dataset.id;
+                const ok = await ui.confirmModal('Archive this lead?');
+                if (!ok) return;
+                try {
+                    await apiClient.archiveLead(id);
+                    ui.showToast('Lead archived', 'success');
+                    loadLeads();
+                } catch (err) {
+                    ui.showToast(err?.message || 'Archive failed', 'error');
+                }
+            });
+        });
+        tableBody.querySelectorAll('.lead-restore').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                const id = e.target.closest('tr').dataset.id;
+                const ok = await ui.confirmModal('Restore this lead?');
+                if (!ok) return;
+                try {
+                    await apiClient.restoreLead(id);
+                    ui.showToast('Lead restored', 'success');
+                    loadLeads();
+                } catch (err) {
+                    ui.showToast(err?.message || 'Restore failed', 'error');
                 }
             });
         });
@@ -267,27 +349,6 @@ function initLeads() {
         renderLeads();
     });
 
-    leadBulkApply?.addEventListener('click', async () => {
-        const status = leadBulkStatus?.value || '';
-        if (!status) {
-            ui.showToast('Select a status', 'error');
-            return;
-        }
-        if (!selectedLeadIds.size) {
-            ui.showToast('Select at least one lead', 'error');
-            return;
-        }
-        try {
-            await apiClient.bulkUpdateLeads(Array.from(selectedLeadIds), status);
-            ui.showToast('Leads updated', 'success');
-            selectedLeadIds.clear();
-            renderLeads();
-            loadLeads();
-        } catch (err) {
-            ui.showToast(err.message || 'Bulk update failed', 'error');
-        }
-    });
-
     cancelBtn?.addEventListener('click', () => ui.toggle(formContainer, false));
 
     form?.addEventListener('submit', async (e) => {
@@ -320,9 +381,11 @@ function initLeads() {
 
     function loadLeadFilters() {
         try {
-            return JSON.parse(localStorage.getItem('crm_lead_filters')) || {};
+            const filters = JSON.parse(localStorage.getItem('crm_lead_filters')) || {};
+            if (!filters.archived) filters.archived = 'active';
+            return filters;
         } catch (_) {
-            return {};
+            return { archived: 'active' };
         }
     }
 
@@ -334,6 +397,7 @@ function initLeads() {
         currentFilters = {
             status: statusFilter.value || '',
             source: sourceFilter.value || '',
+            archived: archiveFilter?.value || 'active',
         };
         leadPagination.page = 1;
         saveLeadFilters(currentFilters);
@@ -439,9 +503,9 @@ function initLeads() {
     }
 
     leadBulkApply?.addEventListener('click', async () => {
-        const status = leadBulkStatus?.value || '';
-        if (!status) {
-            ui.showToast('Select a status', 'error');
+        const action = leadBulkStatus?.value || '';
+        if (!action) {
+            ui.showToast('Select an action', 'error');
             return;
         }
         if (!selectedLeadIds.size) {
@@ -449,8 +513,17 @@ function initLeads() {
             return;
         }
         try {
-            await apiClient.bulkUpdateLeads(Array.from(selectedLeadIds), status);
-            ui.showToast('Leads updated', 'success');
+            const ids = Array.from(selectedLeadIds);
+            if (action === 'archive') {
+                await apiClient.bulkArchiveLeads(ids);
+                ui.showToast('Leads archived', 'success');
+            } else if (action === 'restore') {
+                await apiClient.bulkRestoreLeads(ids);
+                ui.showToast('Leads restored', 'success');
+            } else {
+                await apiClient.bulkUpdateLeads(ids, action);
+                ui.showToast('Leads updated', 'success');
+            }
             selectedLeadIds.clear();
             renderLeads();
             loadLeads();
@@ -462,6 +535,10 @@ function initLeads() {
     async function updateLeadStatus(id, newStatus) {
         const lead = leadData.find(l => String(l.id) === String(id));
         if (!lead) return;
+        if (lead.archived_at) {
+            ui.showToast('Restore the lead to move it', 'error');
+            return;
+        }
         try {
             await apiClient.updateLead(id, { ...lead, status: newStatus });
             ui.showToast('Lead moved', 'success');
@@ -469,18 +546,6 @@ function initLeads() {
         } catch (err) {
             ui.showToast(err?.message || 'Failed to update lead', 'error');
         }
-    }
-
-    function loadLeadFilters() {
-        try {
-            return JSON.parse(localStorage.getItem('crm_lead_filters')) || {};
-        } catch (_) {
-            return {};
-        }
-    }
-
-    function saveLeadFilters(filters) {
-        localStorage.setItem('crm_lead_filters', JSON.stringify(filters));
     }
 
     loadLeads();

@@ -1,0 +1,39 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>XSS Protection Test</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="../../public/assets/css/tailwind.css" />
+</head>
+<body>
+  <table>
+    <tbody id="contactsTableBody">
+      <tr>
+        <td>
+          <button class="contact-files" data-id="1">View</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- files modal placeholders referenced by clients.js -->
+  <div id="contactFilesModal" class="hidden">
+    <div id="contactFilesSubtitle"></div>
+    <div id="contactFilesList"></div>
+  </div>
+
+  <script src="../../public/assets/js/ui.js"></script>
+  <script src="../../public/assets/js/apiClient.js"></script>
+  <script src="../../public/assets/js/clients.js"></script>
+
+  <script>
+    // Initialize the clients UI so that the .contact-files handler will be attached
+    document.addEventListener('DOMContentLoaded', function () {
+      if (typeof initClients === 'function') {
+        try { initClients(); } catch (e) { console.error('initClients error', e); }
+      }
+    });
+  </script>
+</body>
+</html>

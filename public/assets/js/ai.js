@@ -1,3 +1,5 @@
+// AI assistant UI behavior and API calls.
+
 function initAiAssistant() {
     const summarizeForm = document.getElementById('aiSummarizeForm');
     const followupForm = document.getElementById('aiFollowupForm');

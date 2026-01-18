@@ -1,4 +1,5 @@
 <?php
+// Controller for lead CRUD, filters, and archive actions.
 
 require_once __DIR__ . '/../middleware/AuthMiddleware.php';
 require_once __DIR__ . '/../services/Response.php';
@@ -8,7 +9,9 @@ require_once __DIR__ . '/BaseController.php';
 
 class LeadController extends BaseController
 {
+    /** @var array<int|string, string> */
     private array $leadStatuses = ['new', 'contacted', 'qualified', 'not_qualified'];
+    /** @var array<int|string, string> */
     private array $propertyTypes = [
         'Studio',
         '1 Bedroom',
@@ -20,17 +23,27 @@ class LeadController extends BaseController
         'Commercial Office',
         'Commercial Rental',
     ];
+    /** @var array<int|string, string> */
     private array $currencies = ['USD', 'AED'];
+    /** @var array<int|string, string> */
     private array $sources = ['Bayut', 'Property Finder', 'Dubizzel', 'Reference/Random', 'Social Media'];
+    /** @var array<int|string, string> */
     private array $propertyFor = ['Rent/Lease', 'Sale/Buy', 'Off-Plan/Buyer'];
+    /** @var array<int|string, string> */
     private array $paymentOptions = ['Cash', 'Mortgage'];
 
     public function index(): void
     {
         $user = AuthMiddleware::require();
+        $createdFrom = $this->normalizeDateFilter($_GET['created_from'] ?? null, 'created_from');
+        $createdTo = $this->normalizeDateFilter($_GET['created_to'] ?? null, 'created_to');
         $filters = [
             'status' => $_GET['status'] ?? null,
             'source' => $_GET['source'] ?? null,
+            'search' => $_GET['search'] ?? null,
+            'archived' => $_GET['archived'] ?? null,
+            'created_from' => $createdFrom,
+            'created_to' => $createdTo,
         ];
         $page = max(1, (int)($_GET['page'] ?? 1));
         $perPage = min(50, max(5, (int)($_GET['per_page'] ?? 20)));
@@ -59,28 +72,28 @@ class LeadController extends BaseController
         $user = AuthMiddleware::require();
         $input = $this->getJsonInput();
 
-        $errors = Validator::required($input, ['name']);
+        $errors = (array)Validator::required($input, ['name']);
         if (!empty($input['email'])) {
-            $errors = array_merge($errors, Validator::email($input['email']));
+            $errors = array_merge($errors, (array)Validator::email((string)($input['email'] ?? '')));
         }
         if (!empty($input['status'])) {
-            $errors = array_merge($errors, Validator::inEnum($input['status'], $this->leadStatuses, 'status'));
+            $errors = array_merge($errors, (array)Validator::inEnum((string)($input['status'] ?? ''), $this->leadStatuses, 'status'));
         }
         if (!empty($input['interested_property'])) {
-            $errors = array_merge($errors, Validator::inEnum($input['interested_property'], $this->propertyTypes, 'interested_property'));
+            $errors = array_merge($errors, (array)Validator::inEnum((string)($input['interested_property'] ?? ''), $this->propertyTypes, 'interested_property'));
         }
         if (!empty($input['property_for'])) {
-            $errors = array_merge($errors, Validator::inEnum($input['property_for'], $this->propertyFor, 'property_for'));
+            $errors = array_merge($errors, (array)Validator::inEnum((string)($input['property_for'] ?? ''), $this->propertyFor, 'property_for'));
         }
         if (!empty($input['source'])) {
-            $errors = array_merge($errors, Validator::inEnum($input['source'], $this->sources, 'source'));
+            $errors = array_merge($errors, (array)Validator::inEnum((string)($input['source'] ?? ''), $this->sources, 'source'));
         }
         if (!empty($input['payment_option'])) {
-            $errors = array_merge($errors, Validator::inEnum($input['payment_option'], $this->paymentOptions, 'payment_option'));
+            $errors = array_merge($errors, (array)Validator::inEnum((string)($input['payment_option'] ?? ''), $this->paymentOptions, 'payment_option'));
         }
-        $currency = strtoupper(trim($input['currency'] ?? ''));
+        $currency = strtoupper(trim((string)($input['currency'] ?? '')));
         if ($currency !== '') {
-            $errors = array_merge($errors, Validator::inEnum($currency, $this->currencies, 'currency'));
+            $errors = array_merge($errors, (array)Validator::inEnum((string)$currency, $this->currencies, 'currency'));
         } else {
             $currency = null;
         }
@@ -92,7 +105,7 @@ class LeadController extends BaseController
             $errors = array_merge($errors, ['budget' => 'Budget must be a number.']);
         }
         if (!empty($input['last_contact_at'])) {
-            $errors = array_merge($errors, Validator::dateYmd(substr($input['last_contact_at'], 0, 10), 'last_contact_at'));
+            $errors = array_merge($errors, (array)Validator::dateYmd(substr((string)($input['last_contact_at'] ?? ''), 0, 10), 'last_contact_at'));
         }
 
         if ($errors) {
@@ -121,31 +134,31 @@ class LeadController extends BaseController
         }
 
         $input = $this->getJsonInput();
-        $errors = Validator::required($input, ['name']);
+        $errors = (array)Validator::required($input, ['name']);
         if (!empty($input['email'])) {
-            $errors = array_merge($errors, Validator::email($input['email']));
+            $errors = array_merge($errors, (array)Validator::email((string)($input['email'] ?? '')));
         }
-        $status = $input['status'] ?? $existing['status'];
-        $errors = array_merge($errors, Validator::inEnum($status, $this->leadStatuses, 'status'));
-        $property = $input['interested_property'] ?? $existing['interested_property'] ?? null;
+        $status = (string)($input['status'] ?? $existing['status'] ?? '');
+        $errors = array_merge($errors, (array)Validator::inEnum($status, $this->leadStatuses, 'status'));
+        $property = (string)($input['interested_property'] ?? $existing['interested_property'] ?? '');
         if (!empty($property)) {
-            $errors = array_merge($errors, Validator::inEnum($property, $this->propertyTypes, 'interested_property'));
+            $errors = array_merge($errors, (array)Validator::inEnum($property, $this->propertyTypes, 'interested_property'));
         }
-        $propertyFor = $input['property_for'] ?? $existing['property_for'] ?? null;
+        $propertyFor = (string)($input['property_for'] ?? $existing['property_for'] ?? '');
         if (!empty($propertyFor)) {
-            $errors = array_merge($errors, Validator::inEnum($propertyFor, $this->propertyFor, 'property_for'));
+            $errors = array_merge($errors, (array)Validator::inEnum($propertyFor, $this->propertyFor, 'property_for'));
         }
-        $source = $input['source'] ?? $existing['source'] ?? null;
+        $source = (string)($input['source'] ?? $existing['source'] ?? '');
         if (!empty($source)) {
-            $errors = array_merge($errors, Validator::inEnum($source, $this->sources, 'source'));
+            $errors = array_merge($errors, (array)Validator::inEnum($source, $this->sources, 'source'));
         }
-        $paymentOption = $input['payment_option'] ?? $existing['payment_option'] ?? null;
+        $paymentOption = (string)($input['payment_option'] ?? $existing['payment_option'] ?? '');
         if (!empty($paymentOption)) {
-            $errors = array_merge($errors, Validator::inEnum($paymentOption, $this->paymentOptions, 'payment_option'));
+            $errors = array_merge($errors, (array)Validator::inEnum($paymentOption, $this->paymentOptions, 'payment_option'));
         }
-        $currency = strtoupper(trim($input['currency'] ?? ($existing['currency'] ?? '')));
+        $currency = strtoupper(trim((string)($input['currency'] ?? ($existing['currency'] ?? ''))));
         if ($currency !== '') {
-            $errors = array_merge($errors, Validator::inEnum($currency, $this->currencies, 'currency'));
+            $errors = array_merge($errors, (array)Validator::inEnum($currency, $this->currencies, 'currency'));
         } else {
             $currency = null;
         }
@@ -157,21 +170,21 @@ class LeadController extends BaseController
             $errors = array_merge($errors, ['budget' => 'Budget must be a number.']);
         }
         if (!empty($input['last_contact_at'])) {
-            $errors = array_merge($errors, Validator::dateYmd(substr($input['last_contact_at'], 0, 10), 'last_contact_at'));
+            $errors = array_merge($errors, (array)Validator::dateYmd(substr((string)($input['last_contact_at'] ?? ''), 0, 10), 'last_contact_at'));
         }
 
         if ($errors) {
             Response::error('Validation failed', 422, $errors);
         }
 
-        $payload = array_merge($existing, $input, [
+        $payload = array_merge((array)$existing, (array)$input, [
             'status' => $status,
             'interested_property' => $property,
             'currency' => $currency,
             'budget' => $budget !== null ? (float)$budget : null,
             'source' => $source,
             'property_for' => $propertyFor,
-            'area' => $input['area'] ?? $existing['area'] ?? null,
+            'area' => (string)($input['area'] ?? $existing['area'] ?? ''),
             'payment_option' => !empty($paymentOption) ? $paymentOption : null,
         ]);
         Lead::updateLead((int)$user['id'], $id, $payload);
@@ -183,13 +196,39 @@ class LeadController extends BaseController
     {
         $user = AuthMiddleware::require();
         $input = $this->getJsonInput();
-        $errors = Validator::required($input, ['ids', 'status']);
-        $errors = array_merge($errors, Validator::inEnum($input['status'] ?? '', $this->leadStatuses, 'status'));
+        $errors = (array) Validator::required($input, ['ids', 'status']);
+        $errors = array_merge($errors, Validator::inEnum((string)($input['status'] ?? ''), $this->leadStatuses, 'status'));
         if ($errors) {
             Response::error('Validation failed', 422, $errors);
         }
         $ids = is_array($input['ids']) ? array_map('intval', $input['ids']) : [];
-        $updated = Lead::bulkUpdateStatus((int)$user['id'], $ids, $input['status']);
+        $updated = Lead::bulkUpdateStatus((int)$user['id'], $ids, (string)($input['status'] ?? ''));
+        Response::success(['updated' => $updated]);
+    }
+
+    public function bulkArchive(): void
+    {
+        $user = AuthMiddleware::require();
+        $input = $this->getJsonInput();
+        $errors = (array) Validator::required($input, ['ids']);
+        if ($errors) {
+            Response::error('Validation failed', 422, $errors);
+        }
+        $ids = is_array($input['ids']) ? array_map('intval', $input['ids']) : [];
+        $updated = Lead::bulkArchive((int)$user['id'], $ids);
+        Response::success(['updated' => $updated]);
+    }
+
+    public function bulkRestore(): void
+    {
+        $user = AuthMiddleware::require();
+        $input = $this->getJsonInput();
+        $errors = (array) Validator::required($input, ['ids']);
+        if ($errors) {
+            Response::error('Validation failed', 422, $errors);
+        }
+        $ids = is_array($input['ids']) ? array_map('intval', $input['ids']) : [];
+        $updated = Lead::bulkRestore((int)$user['id'], $ids);
         Response::success(['updated' => $updated]);
     }
 
@@ -203,4 +242,41 @@ class LeadController extends BaseController
         Response::success(['message' => 'Lead deleted']);
     }
 
+    public function archive(int $id): void
+    {
+        $user = AuthMiddleware::require();
+        $lead = Lead::find((int)$user['id'], $id);
+        if (!$lead) {
+            Response::error('Lead not found', 404);
+        }
+        if (!empty($lead['archived_at'])) {
+            Response::success(['message' => 'Lead already archived']);
+        }
+        Lead::archiveLead((int)$user['id'], $id);
+        Response::success(['message' => 'Lead archived']);
+    }
+
+    public function restore(int $id): void
+    {
+        $user = AuthMiddleware::require();
+        $lead = Lead::find((int)$user['id'], $id);
+        if (!$lead) {
+            Response::error('Lead not found', 404);
+        }
+        if (empty($lead['archived_at'])) {
+            Response::success(['message' => 'Lead is already active']);
+        }
+        Lead::restoreLead((int)$user['id'], $id);
+        Response::success(['message' => 'Lead restored']);
+    }
+
+    private function normalizeDateFilter(mixed $value, string $field): ?string
+    {
+        $value = trim((string)$value);
+        if ($value === '') {
+            return null;
+        }
+        $value = substr($value, 0, 10);
+        return Validator::dateYmd($value, $field) ? null : $value;
+    }
 }

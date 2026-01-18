@@ -1,6 +1,15 @@
+<!-- View template for the dashboard page. -->
+
 <section data-page="dashboard" class="relative">
     <div class="absolute inset-0 bg-gradient-to-br from-slate-50 via-white to-blue-50"></div>
     <div class="relative z-10 max-w-7xl mx-auto px-4 py-6">
+        <!-- Hard Reload Button at Top -->
+        <div class="flex justify-between items-center mb-4">
+            <button onclick="hardReload()" class="px-4 py-2 bg-red-600 text-white rounded-full shadow-sm hover:bg-red-700 transition text-sm">
+                Hard Reload
+            </button>
+        </div>
+
         <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
             <div>
                 <p class="text-xs uppercase tracking-[0.25em] text-slate-500">Overview</p>
@@ -17,14 +26,14 @@
         </div>
 
         <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <div class="bg-white rounded-2xl shadow-md border border-blue-50 p-4">
+            <div class="bg-white rounded-2xl shadow-md border border-blue-50 p-6 min-h-[150px]">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-2 text-blue-700 text-sm font-medium">
-                        <span class="h-2.5 w-2.5 rounded-full bg-blue-500"></span>Leads
+                        <span class="h-2.5 w-2.5 rounded-full bg-blue-700"></span>Leads
                     </div>
                     <span id="statLeadsDelta" class="text-xs px-2 py-1 rounded-full bg-blue-50 text-blue-700">+0%</span>
                 </div>
-                <div id="statLeads" class="text-3xl font-bold text-slate-900 mt-2">0</div>
+                <div id="statLeads" class="text-4xl font-bold text-slate-900 mt-3">0</div>
                 <p class="text-xs text-slate-500">Week over week</p>
             </div>
             <div class="bg-white rounded-2xl shadow-md border border-emerald-50 p-4">
@@ -52,22 +61,41 @@
         <div class="mt-6 grid gap-4 lg:grid-cols-3">
             <div class="bg-white rounded-2xl shadow-md border border-slate-100 p-4 lg:col-span-2">
                 <div class="grid md:grid-cols-2 gap-4">
-                    <div class="bg-indigo-50 border border-indigo-100 rounded-xl p-4">
+                    <div class="bg-indigo-50 border border-indigo-100 rounded-xl p-4 sm:col-span-2">
                         <div class="flex items-center justify-between mb-3">
                             <h2 class="font-semibold text-slate-900">Pipeline Overview</h2>
                             <span class="text-xs text-indigo-600">Bar chart</span>
                         </div>
-                        <div class="h-48 rounded-lg bg-white border border-indigo-100 p-3">
-                            <canvas id="pipelineChart"></canvas>
+                        <div class="h-52 rounded-lg bg-white border border-indigo-100 p-3">
+                            <canvas id="pipelineChart" class="w-full h-full"></canvas>
                         </div>
                     </div>
-                    <div class="bg-emerald-50 border border-emerald-100 rounded-xl p-4">
-                        <div class="flex items-center justify-between mb-3">
-                            <h2 class="font-semibold text-slate-900">Leads Over Time</h2>
-                            <span class="text-xs text-emerald-600">Line chart</span>
+                    <div class="bg-emerald-50 border border-emerald-100 rounded-xl p-4 sm:col-span-2">
+                        <div class="flex items-center justify-between mb-2">
+                            <h2 class="font-semibold text-slate-900">Leads by Property For</h2>
+                            <span id="dashboardLeadsRangeLabel" class="text-xs text-emerald-600">Last 7d</span>
                         </div>
-                        <div class="h-48 rounded-lg bg-white border border-emerald-100 p-3">
-                            <canvas id="leadsLineChart"></canvas>
+                        <div class="flex flex-wrap items-center gap-2 text-xs mb-3">
+                            <label for="dashboardLeadsRange" class="text-slate-600">Range</label>
+                            <select id="dashboardLeadsRange" name="dashboardLeadsRange" class="border border-emerald-100 rounded px-2 py-1 bg-white text-slate-700">
+                                <option value="week">Week</option>
+                                <option value="month">Month</option>
+                                <option value="year">Year</option>
+                                <option value="custom">Date</option>
+                            </select>
+                            <div id="dashboardLeadsRangeCustom" class="hidden flex items-center gap-2">
+                                <input type="date" id="dashboardLeadsRangeFrom" name="dashboardLeadsRangeFrom" class="border border-emerald-100 rounded px-2 py-1 bg-white text-slate-700">
+                                <span class="text-slate-400">to</span>
+                                <input type="date" id="dashboardLeadsRangeTo" name="dashboardLeadsRangeTo" class="border border-emerald-100 rounded px-2 py-1 bg-white text-slate-700">
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4 text-xs text-slate-600 mb-3 overflow-x-auto whitespace-nowrap">
+                            <span class="inline-flex items-center gap-2"><span class="h-2.5 w-2.5 rounded-full bg-blue-600"></span>Sale/Buy</span>
+                            <span class="inline-flex items-center gap-2"><span class="h-2.5 w-2.5 rounded-full bg-emerald-500"></span>Rent/Lease</span>
+                            <span class="inline-flex items-center gap-2"><span class="h-2.5 w-2.5 rounded-full bg-amber-500"></span>Off-Plan/Buyer</span>
+                        </div>
+                        <div class="h-52 rounded-lg bg-white border border-emerald-100 p-3">
+                            <canvas id="leadsLineChart" class="w-full h-full"></canvas>
                         </div>
                     </div>
                 </div>
@@ -106,5 +134,6 @@
                 </div>
             </div>
         </div>
+
     </div>
 </section>

@@ -1,4 +1,5 @@
 <?php
+// User data access and auth token storage.
 
 require_once __DIR__ . '/../config/database.php';
 

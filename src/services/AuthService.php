@@ -1,4 +1,5 @@
 <?php
+// Auth, token issuance, and password reset logic.
 
 require_once __DIR__ . '/../models/User.php';
 require_once __DIR__ . '/../models/PasswordReset.php';
@@ -12,12 +13,18 @@ class AuthService
     private int $resetExpiryMinutes = 30;
     private int $maxResetFailures = 5;
 
+    /**
+     * Register a new user
+     * @param array<string,mixed> $data
+     * @return array<string,mixed>
+     */
     public function register(array $data): array
     {
-        $errors = Validator::required($data, ['name', 'email', 'password']);
+        $errors = (array) Validator::required($data, ['name', 'email', 'password']);
         if (!empty($data['email'])) {
             $errors = array_merge($errors, Validator::email($data['email']));
         }
+        $errors = array_merge($errors, Validator::passwordStrength((string)($data['password'] ?? ''), 'password', 8));
         if ($errors) {
             return ['errors' => $errors];
         }
@@ -37,9 +44,15 @@ class AuthService
         ];
     }
 
+    /**
+     * Authenticate user and issue token
+     * @param string $email
+     * @param string $password
+     * @return array<string,mixed>
+     */
     public function login(string $email, string $password): array
     {
-        $errors = Validator::required(['email' => $email, 'password' => $password], ['email', 'password']);
+        $errors = (array) Validator::required(['email' => $email, 'password' => $password], ['email', 'password']);
         if ($errors) {
             return ['errors' => $errors];
         }
@@ -56,6 +69,11 @@ class AuthService
         ];
     }
 
+    /**
+     * Logout user by deleting token
+     * @param string|null $token
+     * @return void
+     */
     public function logout(?string $token): void
     {
         if (!$token) {
@@ -64,6 +82,11 @@ class AuthService
         User::deleteToken($token);
     }
 
+    /**
+     * Get current user from token
+     * @param string|null $token
+     * @return array<string,mixed>|null
+     */
     public function currentUser(?string $token): ?array
     {
         if (!$token) {
@@ -73,11 +96,21 @@ class AuthService
         return $user ? $this->sanitizeUser($user) : null;
     }
 
+    /**
+     * Require authentication (alias for currentUser)
+     * @param string|null $token
+     * @return array<string,mixed>|null
+     */
     public function requireAuth(?string $token): ?array
     {
         return $this->currentUser($token);
     }
 
+    /**
+     * Request password reset for email
+     * @param string $email
+     * @return void
+     */
     public function requestPasswordReset(string $email): void
     {
         $email = trim($email);
@@ -101,7 +134,11 @@ class AuthService
         PasswordReset::store($email, $tokenHash, $codeHash, $expiresAt);
 
         $appUrl = env('APP_URL', 'http://localhost');
-        $resetUrl = rtrim($appUrl, '/') . '/index.php?page=login&reset_token=' . urlencode($longToken);
+        $baseUrl = rtrim($appUrl, '/');
+        $resetUrl = $baseUrl
+            . '/index.php?page=login&reset_code=' . urlencode($code)
+            . '&email=' . urlencode($email)
+            . '&reset_token=' . urlencode($longToken);
 
         // Attempt to email the reset link; do not expose raw tokens in logs.
         $sent = Mailer::sendResetEmail($email, $resetUrl, $code);
@@ -112,6 +149,13 @@ class AuthService
         }
     }
 
+    /**
+     * Reset password with token
+     * @param string $token
+     * @param string $newPassword
+     * @param string $email
+     * @return array<string,mixed>
+     */
     public function resetPassword(string $token, string $newPassword, string $email): array
     {
         $email = trim(strtolower($email));
@@ -137,10 +181,6 @@ class AuthService
         }
         $token = trim($token, " \t\n\r\0\x0B\"'");
 
-        if (trim($newPassword) === '') {
-            return ['errors' => ['token' => 'Invalid token or password']];
-        }
-
         $isCode = preg_match('/^\d{6}$/', $token) === 1;
         $entry = $isCode
             ? PasswordReset::findValidByCode($email, $token)
@@ -160,6 +200,11 @@ class AuthService
         if (!$user) {
             PasswordReset::deleteByEmail($entry['email']);
             return ['errors' => ['token' => 'Invalid or expired token']];
+        }
+
+        $passwordErrors = Validator::passwordStrength($newPassword, 'password', 8);
+        if ($passwordErrors) {
+            return ['errors' => $passwordErrors];
         }
 
         $hash = password_hash($newPassword, PASSWORD_BCRYPT);

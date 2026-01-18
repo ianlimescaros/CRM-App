@@ -1,3 +1,37 @@
+# SMART CACHING
+FileETag None
+
+<IfModule mod_headers.c>
+    Header unset ETag
+
+    # No-cache for PHP + core assets
+    <FilesMatch "\.(php|js|css)$">
+        Header set Cache-Control "no-store, no-cache, must-revalidate, max-age=0"
+        Header set Pragma "no-cache"
+        Header set Expires "0"
+    </FilesMatch>
+
+    # Cache static assets for 30 days
+    <FilesMatch "\.(png|jpe?g|gif|svg|webp|ico|woff2?|ttf|eot)$">
+        Header set Cache-Control "public, max-age=2592000, immutable"
+    </FilesMatch>
+</IfModule>
+
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType image/png "access plus 30 days"
+    ExpiresByType image/jpeg "access plus 30 days"
+    ExpiresByType image/gif "access plus 30 days"
+    ExpiresByType image/svg+xml "access plus 30 days"
+    ExpiresByType image/webp "access plus 30 days"
+    ExpiresByType image/x-icon "access plus 30 days"
+    ExpiresByType font/woff "access plus 30 days"
+    ExpiresByType font/woff2 "access plus 30 days"
+    ExpiresByType application/font-woff "access plus 30 days"
+    ExpiresByType font/ttf "access plus 30 days"
+    ExpiresByType application/vnd.ms-fontobject "access plus 30 days"
+</IfModule>
+
 RewriteEngine On
 
 # API routing

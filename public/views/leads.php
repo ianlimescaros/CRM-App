@@ -1,3 +1,5 @@
+<!-- View template for the leads page. -->
+
 <section data-page="leads">
     <div class="flex justify-between items-center mb-4">
         <div class="flex items-center gap-3">
@@ -7,7 +9,12 @@
                 <button id="leadViewKanban" class="px-3 py-2 text-gray-700 hover:bg-gray-100">Kanban</button>
             </div>
         </div>
-        <button id="leadAddBtn" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">Add Lead</button>
+        <div class="flex space-x-4">
+            <button id="leadAddBtn" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">Add Lead</button>
+            <button onclick="hardReload()" class="px-4 py-2 bg-red-600 text-white rounded-full shadow-sm hover:bg-red-700 transition text-sm">
+                Hard Reload
+            </button>
+        </div>
     </div>
     <div class="flex gap-2 mb-4 flex-wrap">
         <label class="sr-only" for="leadStatusFilter">Status</label>
@@ -27,6 +34,12 @@
             <option value="Reference/Random">Reference/Random</option>
             <option value="Social Media">Social Media</option>
         </select>
+        <label class="sr-only" for="leadArchiveFilter">Archive</label>
+        <select id="leadArchiveFilter" name="leadArchiveFilter" autocomplete="off" class="border border-border px-3 py-2 rounded text-sm focus:outline-none focus:ring-2 focus:ring-accent/30">
+            <option value="active">Active</option>
+            <option value="archived">Archived</option>
+            <option value="all">All</option>
+        </select>
         <button id="leadFilterBtn" class="px-3 py-2 border border-border rounded text-sm hover:bg-gray-100 transition">Filter</button>
         <label class="sr-only" for="leadSort">Sort</label>
         <select id="leadSort" name="leadSort" autocomplete="off" class="border border-border px-3 py-2 rounded text-sm focus:outline-none focus:ring-2 focus:ring-accent/30">
@@ -40,12 +53,14 @@
     <div class="flex items-center gap-2 mb-3 text-sm">
         <input type="checkbox" id="leadSelectAll" class="h-4 w-4 border border-border rounded">
         <span class="text-gray-600">Select all</span>
-        <select id="leadBulkStatus" class="border border-border px-3 py-2 rounded text-sm focus:outline-none focus:ring-2 focus:ring-accent/30">
-            <option value="">Bulk status…</option>
+                <select id="leadBulkStatus" class="border border-border px-3 py-2 rounded text-sm focus:outline-none focus:ring-2 focus:ring-accent/30">
+            <option value="">Bulk action</option>
             <option value="new">New</option>
             <option value="contacted">Contacted</option>
             <option value="qualified">Qualified</option>
             <option value="not_qualified">Not Qualified</option>
+            <option value="archive">Archive</option>
+            <option value="restore">Restore</option>
         </select>
         <button id="leadBulkApply" class="px-3 py-2 border border-border rounded text-sm hover:bg-gray-100 transition">Apply</button>
     </div>
@@ -55,6 +70,7 @@
                 <tr>
                     <th class="px-3 py-2 text-left"><input type="checkbox" id="leadHeaderCheckbox" class="h-4 w-4 border border-border rounded"></th>
                     <th class="px-3 py-2 text-left">Name</th>
+                    <th class="px-3 py-2 text-left">Phone</th>
                     <th class="px-3 py-2 text-left">Status</th>
                     <th class="px-3 py-2 text-left">Source</th>
                     <th class="px-3 py-2 text-left">Property For</th>
@@ -103,7 +119,7 @@
         </div>
     </div>
 
-    <div id="leadFormContainer" class="fixed inset-0 bg-black/50 hidden z-40 flex items-start justify-center overflow-y-auto p-4">
+    <div id="leadFormContainer" class="fixed inset-0 bg-black/50 z-40 items-start justify-center overflow-y-auto p-4 flex hidden">
         <div class="bg-gradient-to-r from-blue-500 via-purple-500 to-emerald-500 p-[1px] rounded-card shadow-2xl w-full max-w-3xl mt-10">
             <div class="bg-white rounded-card p-5">
         <h2 class="text-xl font-semibold mb-2" id="leadFormTitle">New Lead</h2>
@@ -204,4 +220,6 @@
             </div>
         </div>
     </div>
+
 </section>
+

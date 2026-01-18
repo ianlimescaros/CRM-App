@@ -1,4 +1,5 @@
 <?php
+// Simple file logger for app events.
 
 class Logger
 {
@@ -8,11 +9,23 @@ class Logger
         return $base;
     }
 
+    /**
+     * Log error message
+     * @param string $message
+     * @param array<string,mixed> $context
+     * @return void
+     */
     public static function error(string $message, array $context = []): void
     {
         self::write('ERROR', $message, $context);
     }
 
+    /**
+     * Log info message
+     * @param string $message
+     * @param array<string,mixed> $context
+     * @return void
+     */
     public static function info(string $message, array $context = []): void
     {
         self::write('INFO', $message, $context);

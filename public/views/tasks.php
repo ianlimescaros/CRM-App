@@ -1,3 +1,5 @@
+<!-- View template for the tasks page. -->
+
 <section data-page="tasks">
     <div class="flex justify-between items-center mb-4">
         <div class="flex items-center gap-3">

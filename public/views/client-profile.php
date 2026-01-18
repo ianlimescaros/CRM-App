@@ -1,3 +1,5 @@
+<!-- View template for the client profile page. -->
+
 <section data-page="client-profile" class="max-w-5xl">
     <div class="bg-white border border-border rounded-card shadow-card p-4 mb-4">
         <div class="flex items-start gap-3 justify-between">

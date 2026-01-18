@@ -90,6 +90,8 @@ function renderSparkline(series) {
 function renderBarChart(canvasEl, labels, data, label, colors = ['#2563EB']) {
     const ctx = canvasEl.getContext('2d');
     if (!ctx) return;
+    canvasEl.style.width = '100%';
+    canvasEl.style.height = '100%';
     if (canvasEl._chart) {
         canvasEl._chart.destroy();
     }
@@ -106,6 +108,7 @@ function renderBarChart(canvasEl, labels, data, label, colors = ['#2563EB']) {
         },
         options: {
             responsive: true,
+            maintainAspectRatio: false,
             plugins: { legend: { display: false } },
             scales: {
                 x: { ticks: { color: '#475569' }, grid: { display: false } },
@@ -138,11 +141,52 @@ function renderLineChart(canvasEl, labels, data, label, color = '#2563EB') {
         },
         options: {
             responsive: true,
+            maintainAspectRatio: false,
             plugins: { legend: { display: false } },
             scales: {
                 x: { ticks: { color: '#475569' }, grid: { display: false } },
                 y: { ticks: { color: '#475569', precision: 0 }, grid: { color: '#E2E8F0' } }
             }
         }
+    });
+    requestAnimationFrame(() => {
+        if (canvasEl._chart) canvasEl._chart.resize();
+    });
+}
+
+function renderMultiLineChart(canvasEl, labels, datasets) {
+    const ctx = canvasEl.getContext('2d');
+    if (!ctx) return;
+    canvasEl.style.width = '100%';
+    canvasEl.style.height = '100%';
+    if (canvasEl._chart) {
+        canvasEl._chart.destroy();
+    }
+    const series = datasets.map(dataset => ({
+        ...dataset,
+        fill: false,
+        tension: 0.3,
+        pointRadius: 2,
+        pointBackgroundColor: dataset.borderColor,
+        borderWidth: 2,
+    }));
+    canvasEl._chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels,
+            datasets: series,
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { ticks: { color: '#475569' }, grid: { display: false } },
+                y: { ticks: { color: '#475569', precision: 0 }, grid: { color: '#E2E8F0' } }
+            }
+        }
+    });
+    requestAnimationFrame(() => {
+        if (canvasEl._chart) canvasEl._chart.resize();
     });
 }

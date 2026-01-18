@@ -1,3 +1,9 @@
+// App bootstrap and per-page initializer.
+
+
+
+
+
 document.addEventListener('DOMContentLoaded', async () => {
     const pageEl = document.querySelector('[data-page]');
     const page = pageEl ? pageEl.dataset.page : null;
@@ -41,6 +47,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         } catch (_) {
             // ignore logout failures
         } finally {
+            // Clear cookie token (index.php uses this)
+            document.cookie = 'auth_token=; Max-Age=0; path=/; SameSite=Lax';
+
             apiClient.setToken(null);
             localStorage.removeItem('crm_user_email');
             ui.showToast('Logged out', 'success');
@@ -85,6 +94,38 @@ document.addEventListener('DOMContentLoaded', async () => {
         const initials = parts.slice(0, 2).toUpperCase();
         avatarInitials.textContent = initials;
     }
+
+    // Sidebar collapse handling
+    const sidebarCollapseBtn = document.getElementById('sidebarCollapseBtn');
+    function applySidebarState() {
+        const collapsed = localStorage.getItem('crm_sidebar_collapsed') === '1';
+        document.documentElement.classList.toggle('sidebar-collapsed', collapsed);
+    }
+    applySidebarState();
+    sidebarCollapseBtn?.addEventListener('click', () => {
+        const collapsed = localStorage.getItem('crm_sidebar_collapsed') === '1';
+        localStorage.setItem('crm_sidebar_collapsed', collapsed ? '0' : '1');
+        applySidebarState();
+    });
+
+    // Global new-item shortcut: Ctrl/Cmd+N opens add on leads/contacts pages
+    document.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'n') {
+            const tag = (e.target && e.target.tagName || '').toLowerCase();
+            if (tag === 'input' || tag === 'textarea' || e.target.isContentEditable) return;
+            if (page === 'leads') {
+                e.preventDefault();
+                const btn = document.getElementById('leadAddBtn');
+                if (btn) btn.click();
+            } else if (page === 'contacts') {
+                e.preventDefault();
+                const btn = document.getElementById('contactAddBtn');
+                if (btn) btn.click();
+            }
+        }
+    });
+
+    // Command palette / keyboard niceties handled in globalSearch.js (Ctrl/Cmd+K)
 
     switch (page) {
         case 'login':
@@ -137,8 +178,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                 initProfile();
             }
             break;
+        case 'tenancy-contracts':
+            // 🔹 This is the important new bit
+            if (typeof initTenancyContracts === 'function') {
+                initTenancyContracts();
+            }
+            break;
         default:
             break;
     }
 });
-

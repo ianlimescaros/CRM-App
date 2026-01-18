@@ -1,0 +1,29 @@
+name: E2E XSS tests
+
+# This workflow is kept as an optional/manual check and a weekly scheduled job
+# to avoid blocking pull requests with Puppeteer/Chromium complexities.
+on:
+  workflow_dispatch: {}
+  schedule:
+    - cron: '0 3 * * 1' # weekly on Monday at 03:00 UTC
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Run Puppeteer E2E test
+        env:
+          PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: 'false'
+          CI: 'true'
+        run: npm run test:e2e

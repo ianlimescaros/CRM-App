@@ -1,3 +1,5 @@
+// Profile settings UI logic.
+
 async function initProfile() {
     const form = document.getElementById('profileForm');
     const errorBox = document.getElementById('profileError');

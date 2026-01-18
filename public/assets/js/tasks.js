@@ -1,3 +1,5 @@
+// Tasks UI and CRUD actions.
+
 function initTasks() {
     const tableBody = document.getElementById('tasksTableBody');
     const addBtn = document.getElementById('taskAddBtn');

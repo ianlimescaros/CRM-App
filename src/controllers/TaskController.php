@@ -1,4 +1,5 @@
 <?php
+// Controller for task CRUD.
 
 require_once __DIR__ . '/../middleware/AuthMiddleware.php';
 require_once __DIR__ . '/../services/Response.php';
@@ -10,6 +11,7 @@ require_once __DIR__ . '/BaseController.php';
 
 class TaskController extends BaseController
 {
+    /** @var array<int|string, string> */
     private array $statuses = ['pending', 'done'];
 
     public function index(): void
@@ -48,9 +50,9 @@ class TaskController extends BaseController
         $user = AuthMiddleware::require();
         $input = $this->normalizeClientLink($this->getJsonInput());
 
-        $errors = Validator::required($input, ['title']);
-        $status = $input['status'] ?? 'pending';
-        $errors = array_merge($errors, Validator::inEnum($status, $this->statuses, 'status'));
+        $errors = (array) Validator::required($input, ['title']);
+        $status = (string)($input['status'] ?? 'pending');
+        $errors = array_merge($errors, (array)Validator::inEnum($status, $this->statuses, 'status'));
         if ($errors) {
             Response::error('Validation failed', 422, $errors);
         }
@@ -71,11 +73,11 @@ class TaskController extends BaseController
         }
 
         $input = $this->normalizeClientLink($this->getJsonInput());
-        $payload = array_merge($existing, $input);
-        $status = $payload['status'] ?? 'pending';
+        $payload = array_merge((array)$existing, (array)$input);
+        $status = (string)($payload['status'] ?? 'pending');
         $errors = array_merge(
-            Validator::required($payload, ['title']),
-            Validator::inEnum($status, $this->statuses, 'status')
+            (array)Validator::required($payload, ['title']),
+            (array)Validator::inEnum($status, $this->statuses, 'status')
         );
         if ($errors) {
             Response::error('Validation failed', 422, $errors);
@@ -99,6 +101,11 @@ class TaskController extends BaseController
         Response::success(['message' => 'Task deleted']);
     }
 
+    /**
+     * @param array<string,mixed> $user
+     * @param array<string,mixed> $data
+     * @return void
+     */
     private function assertLinkOwnership(array $user, array $data): void
     {
         if (!empty($data['lead_id'])) {
@@ -115,6 +122,10 @@ class TaskController extends BaseController
         }
     }
 
+    /**
+     * @param array<string,mixed> $data
+     * @return array<string,mixed>
+     */
     private function normalizeClientLink(array $data): array
     {
         if (isset($data['contact_id']) && empty($data['client_id'])) {
@@ -122,5 +133,4 @@ class TaskController extends BaseController
         }
         return $data;
     }
-
 }

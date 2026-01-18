@@ -1,4 +1,5 @@
 <?php
+// API route map binding paths to controllers.
 
 require_once __DIR__ . '/../controllers/AuthController.php';
 require_once __DIR__ . '/../controllers/LeadController.php';
@@ -6,11 +7,15 @@ require_once __DIR__ . '/../controllers/ClientController.php';
 require_once __DIR__ . '/../controllers/DealController.php';
 require_once __DIR__ . '/../controllers/TaskController.php';
 require_once __DIR__ . '/../controllers/AiController.php';
+require_once __DIR__ . '/../controllers/TenancyContractController.php';
+require_once __DIR__ . '/../controllers/NocLeasingController.php';
+require_once __DIR__ . '/../controllers/SearchController.php';
 
 return [
     ['method' => 'POST', 'path' => '/auth/register', 'handler' => [AuthController::class, 'register']],
     ['method' => 'POST', 'path' => '/auth/login', 'handler' => [AuthController::class, 'login']],
     ['method' => 'POST', 'path' => '/auth/logout', 'handler' => [AuthController::class, 'logout']],
+    ['method' => 'POST', 'path' => '/auth/session', 'handler' => [AuthController::class, 'createSession']],
     ['method' => 'POST', 'path' => '/auth/forgot', 'handler' => [AuthController::class, 'forgot']],
     ['method' => 'POST', 'path' => '/auth/reset', 'handler' => [AuthController::class, 'reset']],
     ['method' => 'GET', 'path' => '/auth/me', 'handler' => [AuthController::class, 'me']],
@@ -20,7 +25,11 @@ return [
     ['method' => 'POST', 'path' => '/leads', 'handler' => [LeadController::class, 'store']],
     ['method' => 'PUT', 'path' => '/leads/{id}', 'handler' => [LeadController::class, 'update']],
     ['method' => 'DELETE', 'path' => '/leads/{id}', 'handler' => [LeadController::class, 'destroy']],
+    ['method' => 'POST', 'path' => '/leads/{id}/archive', 'handler' => [LeadController::class, 'archive']],
+    ['method' => 'POST', 'path' => '/leads/{id}/restore', 'handler' => [LeadController::class, 'restore']],
     ['method' => 'PATCH', 'path' => '/leads/bulk', 'handler' => [LeadController::class, 'bulkUpdate']],
+    ['method' => 'POST', 'path' => '/leads/bulk/archive', 'handler' => [LeadController::class, 'bulkArchive']],
+    ['method' => 'POST', 'path' => '/leads/bulk/restore', 'handler' => [LeadController::class, 'bulkRestore']],
 
     ['method' => 'GET', 'path' => '/clients', 'handler' => [ClientController::class, 'index']],
     ['method' => 'POST', 'path' => '/clients', 'handler' => [ClientController::class, 'store']],
@@ -53,4 +62,8 @@ return [
 
     ['method' => 'POST', 'path' => '/ai/summarize', 'handler' => [AiController::class, 'summarize']],
     ['method' => 'POST', 'path' => '/ai/suggest-followup', 'handler' => [AiController::class, 'suggestFollowup']],
+
+    ['method' => 'POST', 'path' => '/tenancy-contracts/pdf', 'handler' => [TenancyContractController::class, 'downloadPdf']],
+    ['method' => 'POST', 'path' => '/noc-leasing/pdf', 'handler' => [NocLeasingController::class, 'downloadPdf']],
+    ['method' => 'GET', 'path' => '/search', 'handler' => [SearchController::class, 'search']],
 ];
